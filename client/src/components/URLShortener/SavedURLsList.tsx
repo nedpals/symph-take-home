@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShortURL, URLStats } from '../../../../shared/types/url_shortener';
 import AnalyticsModal from './AnalyticsModal';
-import { apiEndpointURL } from '../../api_utils';
+import { apiEndpointURL, createURL } from '../../api_utils';
 
 interface SavedURLsListProps {
   urls: Array<{
@@ -47,7 +47,7 @@ export default function SavedURLsList({ urls, onRemove }: SavedURLsListProps) {
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {window.location.origin}/{shortUrl.slug}
+                  {createURL(shortUrl.slug)}
                 </p>
                 <p className="text-xs text-gray-500 truncate">{originalUrl}</p>
               </div>
@@ -62,7 +62,7 @@ export default function SavedURLsList({ urls, onRemove }: SavedURLsListProps) {
                 </button>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/${shortUrl.slug}`);
+                    navigator.clipboard.writeText(createURL(shortUrl.slug));
                   }}
                   className="text-gray-400 hover:text-purple-600 transition-colors p-1"
                 >

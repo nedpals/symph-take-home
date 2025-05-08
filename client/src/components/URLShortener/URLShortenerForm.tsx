@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
-import { fetchUrlMetadata } from "../../api_utils";
+import { BACKEND_URL, createURL, fetchUrlMetadata } from "../../api_utils";
 import UTMParametersModal from './UTMParametersModal';
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import PopupContainer from '../PopupContainer';
@@ -194,9 +194,8 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
   };
 
   // Build a preview of what the shortened URL might look like
-  const baseUrl = window.location.origin;
   const previewSlug = formData.slug || "random-slug";
-  const previewUrl = `${baseUrl}/${previewSlug}`;
+  const previewUrl = createURL(previewSlug);
 
   return (
     <div className="max-w-2xl mx-auto rounded-2xl shadow-sm bg-white/95 backdrop-blur border border-purple-100/20">
@@ -298,7 +297,7 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
                       value={formData.slug}
                       onChange={handleInputChange}
                       placeholder="custom-slug"
-                      className={`block w-full pl-[calc(1.5rem+${window.location.origin.length/3}ch)] px-4 py-2.5 
+                      className={`block w-full pl-[calc(1.5rem+${BACKEND_URL.length/3}ch)] px-4 py-2.5 
                         bg-white/50 border rounded-lg transition-all duration-200
                         focus:ring-2 focus:ring-purple-100 focus:border-purple-300 
                         ${slugError ? 'border-red-200 text-red-600' : 'border-gray-200 hover:border-gray-300'}`}

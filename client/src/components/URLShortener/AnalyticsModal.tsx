@@ -1,5 +1,6 @@
 import BaseModal from '../common/BaseModal';
 import { URLStats } from '../../../../shared/types/url_shortener';
+import { createURL } from '../../api_utils';
 
 interface Props {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Pr
       isOpen={isOpen} 
       onClose={onClose} 
       title="URL Analytics"
-      description={`Analytics for ${window.location.origin}/${stats.slug}`}
+      description={`Analytics for ${createURL(stats.slug)}`}
     >
       <div className="space-y-6">
         {/* Overview Cards */}
