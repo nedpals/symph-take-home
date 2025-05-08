@@ -152,7 +152,7 @@ export class URLShortenerService {
       device: uaResult.device.model || uaResult.device.type,
       isMobile: Boolean(uaResult.device.type === 'mobile'),
       isBot: /bot|crawler|spider|crawling/i.test(rawUserAgent || ''),
-      referrer
+      referer: referrer
     });
   }
 
