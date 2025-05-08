@@ -28,3 +28,39 @@ export interface UTMParameters {
 export interface ErrorResponse {
   error: string;
 }
+
+export interface ClickData {
+  id: string;
+  shortUrlId: string;
+  timestamp: Date;
+  ipAddress: string | null;
+  userAgent: string | null;
+  browser: string | null;
+  browserVersion: string | null;
+  os: string | null;
+  osVersion: string | null;
+  device: string | null;
+  isMobile: boolean;
+  isBot: boolean;
+  referer: string | null;
+}
+
+export interface URLStats extends ShortURL {
+  clicks: ClickAnalytics;
+}
+
+export interface ClickAnalytics {
+  total: number;
+  browsers: Record<string, number>;
+  os: Record<string, number>;
+  devices: Record<string, number>;
+  referrers: Record<string, number>;
+  overTime: {
+    date: string;
+    count: number;
+  }[];
+  mobileVsDesktop: {
+    mobile: number;
+    desktop: number;
+  };
+}

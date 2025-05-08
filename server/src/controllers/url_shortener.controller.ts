@@ -54,7 +54,7 @@ export async function redirectToURL(req: Request, res: Response) {
       return respondError(res, "Slug is required");
     }
     
-    const shortUrl = await urlService.getBySlugAndTrack(slug);
+    const shortUrl = await urlService.getBySlugAndTrack(slug, req);
     if (!shortUrl) {
       return respondError(res, "URL not found or has expired", 404);
     }
@@ -68,7 +68,7 @@ export async function redirectToURL(req: Request, res: Response) {
 }
 
 /**
- * Get statistics for a shortened URL
+ * Get detailed statistics for a shortened URL
  */
 export async function getURLStats(req: Request, res: Response) {
   try {
@@ -77,9 +77,9 @@ export async function getURLStats(req: Request, res: Response) {
       return respondError(res, "Slug is required");
     }
     
-    const stats = await urlService.getStats(slug);
+    const stats = await urlService.getDetailedStats(slug);
     if (!stats) {
-      return respondError(res, "URL not found or has expired", 404);
+      return respondError(res, "URL not found", 404);
     }
     
     return res.json({ stats });

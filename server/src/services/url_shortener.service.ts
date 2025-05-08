@@ -1,7 +1,9 @@
 import { db } from "../db/knex";
 import crypto from "crypto";
+import { UAParser } from 'ua-parser-js';
+import { Request } from "express";
 
-import { CreateShortURLParams, ShortURL } from "../../../shared/types/url_shortener"
+import { CreateShortURLParams, ShortURL, URLStats, ClickAnalytics } from "../../../shared/types/url_shortener"
 
 // Simple in-memory cache for frequently accessed URLs
 const urlCache = new Map<string, string>();
@@ -65,27 +67,33 @@ export class URLShortenerService {
   }
 
   /**
-   * Get a shortened URL by slug and increment its click count
+   * Get a shortened URL by slug and track click data
    */
-  async getBySlugAndTrack(slug: string): Promise<ShortURL | null> {
+  async getBySlugAndTrack(slug: string, req?: Request): Promise<ShortURL | null> {
     // Check cache first
     if (urlCache.has(slug)) {
       const originalUrl = urlCache.get(slug);
       if (originalUrl) {
-        // Update click count and last access time in background
-        void db("shortened_urls")
-          .where({ slug })
-          .increment("clickCount", 1) 
-          .update({ lastAccessedAt: new Date() }); 
+        // Get the short URL data for tracking
+        const shortUrl = await db("shortened_urls").where({ slug }).first();
+        if (shortUrl) {
+          // Track click in background without waiting
+          void this.trackClick(shortUrl.id, req);
+          // Update click count and last access time
+          void db("shortened_urls")
+            .where({ id: shortUrl.id })
+            .increment("clickCount", 1)
+            .update({ lastAccessedAt: new Date() });
+        }
         
         return {
-          id: "",
+          id: shortUrl?.id || "",
           originalURL: originalUrl,
           slug,
-          expiresAt: null, 
-          clickCount: 0, 
-          lastAccessedAt: null, 
-          utmParameters: null, 
+          expiresAt: null,
+          clickCount: 0,
+          lastAccessedAt: null,
+          utmParameters: null,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -102,20 +110,50 @@ export class URLShortenerService {
     }
     
     // Check if URL has expired
-    if (shortUrl.expiresAt && new Date(shortUrl.expiresAt) < new Date()) { 
+    if (shortUrl.expiresAt && new Date(shortUrl.expiresAt) < new Date()) {
       return null;
     }
     
+    // Track click
+    await this.trackClick(shortUrl.id, req);
+    
     // Update click count and last access time
     await db("shortened_urls")
-      .where({ slug })
-      .increment("clickCount", 1) 
+      .where({ id: shortUrl.id })
+      .increment("clickCount", 1)
       .update({ lastAccessedAt: new Date() });
     
     // Add to cache
     this.addToCache(slug, shortUrl.originalURL);
     
     return shortUrl;
+  }
+
+  /**
+   * Track click data for a shortened URL
+   */
+  private async trackClick(shortUrlId: string, req?: Request): Promise<void> {
+    if (!req) return;
+
+    const rawUserAgent = req.headers['user-agent'];
+    const referrer = req.headers['referer'] || req.headers['referrer'] || null;
+
+    const ua = new UAParser(rawUserAgent || '');
+    const uaResult = ua.getResult();
+
+    await db("link_clicks").insert({
+      shortUrlId,
+      ipAddress: req.ip,
+      userAgent: rawUserAgent,
+      browser: uaResult.browser.name,
+      browserVersion: uaResult.browser.version,
+      os: uaResult.os.name,
+      osVersion: uaResult.os.version,
+      device: uaResult.device.model || uaResult.device.type,
+      isMobile: Boolean(uaResult.device.type === 'mobile'),
+      isBot: /bot|crawler|spider|crawling/i.test(rawUserAgent || ''),
+      referrer
+    });
   }
 
   /**
@@ -140,5 +178,93 @@ export class URLShortenerService {
     }
     
     urlCache.set(slug, originalUrl);
+  }
+
+  /**
+   * Get detailed statistics for a shortened URL
+   */
+  async getDetailedStats(slug: string): Promise<URLStats | null> {
+    const shortUrl = await db("shortened_urls")
+      .where({ slug })
+      .first();
+
+    if (!shortUrl) {
+      return null;
+    }
+
+    const clicks = await this.getClickAnalytics(shortUrl.id);
+    return {
+      ...shortUrl,
+      clicks
+    };
+  }
+
+  /**
+   * Get click analytics for a shortened URL
+   */
+  private async getClickAnalytics(shortUrlId: string): Promise<ClickAnalytics> {
+    // Get all clicks for the URL
+    const clicks = await db("link_clicks")
+      .where({ shortUrlId })
+      .orderBy("timestamp", "asc");
+
+    // Initialize analytics object
+    const analytics: ClickAnalytics = {
+      total: clicks.length,
+      browsers: {},
+      os: {},
+      devices: {},
+      referrers: {},
+      overTime: [],
+      mobileVsDesktop: {
+        mobile: 0,
+        desktop: 0
+      }
+    };
+
+    // Create a map for tracking daily clicks
+    const dailyClicks = new Map<string, number>();
+
+    // Process each click
+    clicks.forEach(click => {
+      // Count browsers
+      if (click.browser) {
+        analytics.browsers[click.browser] = (analytics.browsers[click.browser] || 0) + 1;
+      }
+
+      // Count operating systems
+      if (click.os) {
+        analytics.os[click.os] = (analytics.os[click.os] || 0) + 1;
+      }
+
+      // Count devices
+      if (click.device) {
+        analytics.devices[click.device] = (analytics.devices[click.device] || 0) + 1;
+      }
+
+      // Count referrers
+      if (click.referer) {
+        const referrerHost = new URL(click.referer).hostname;
+        analytics.referrers[referrerHost] = (analytics.referrers[referrerHost] || 0) + 1;
+      }
+
+      // Track mobile vs desktop
+      if (click.isMobile) {
+        analytics.mobileVsDesktop.mobile++;
+      } else {
+        analytics.mobileVsDesktop.desktop++;
+      }
+
+      // Track clicks over time
+      const date = new Date(click.timestamp).toISOString().split('T')[0];
+      dailyClicks.set(date, (dailyClicks.get(date) || 0) + 1);
+    });
+
+    // Convert daily clicks to sorted array
+    analytics.overTime = Array.from(dailyClicks.entries())
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return analytics;
   }
 }
