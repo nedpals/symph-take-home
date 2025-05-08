@@ -1,6 +1,8 @@
 import { useState } from "react";
 import URLShortenerForm from "../components/URLShortener/URLShortenerForm";
-import URLShortenerResult from "../components/URLShortener/UrlShortenerResult";
+import URLShortenerResult from "../components/URLShortener/URLShortenerResult";
+import SavedURLsList from "../components/URLShortener/SavedURLsList";
+import { useSavedUrls } from "../hooks/useSavedUrls";
 
 import { CreateShortURLParams, ErrorResponse, ShortURL } from "../../../shared/types/url_shortener";
 import { apiEndpointURL } from "../api_utils";
@@ -14,6 +16,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shortUrlData, setShortUrlData] = useState<ShortUrlData | null>(null);
+  const { savedUrls, saveUrl, removeUrl } = useSavedUrls();
 
   const createShortUrl = async (formData: CreateShortURLParams) => {
     setIsLoading(true);
@@ -38,10 +41,13 @@ export default function HomePage() {
         throw new Error("Failed to shorten URL");
       }
 
-      setShortUrlData({
+      const urlData = {
         shortUrl: data.shortUrl,
         originalUrl: formData.originalUrl,
-      });
+      };
+      
+      setShortUrlData(urlData);
+      saveUrl(data.shortUrl, formData.originalUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
       console.error("Error shortening URL:", err);
@@ -87,6 +93,8 @@ export default function HomePage() {
             <URLShortenerForm onSubmit={createShortUrl} isLoading={isLoading} />
           )}
         </div>
+
+        <SavedURLsList urls={savedUrls} onRemove={removeUrl} />
       </div>
     </div>
   );
