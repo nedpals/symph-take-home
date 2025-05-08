@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
 import { fetchUrlMetadata } from "../../api_utils";
-
-type FormData = CreateShortURLParams & { showAdvanced: boolean };
+import UTMParametersModal from './UTMParametersModal';
+import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import PopupContainer from '../PopupContainer';
 
 interface UrlMetadata {
   title?: string;
@@ -28,11 +29,10 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
   onSubmit: (data: CreateShortURLParams) => Promise<void>;
   isLoading: boolean;
 }) {
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CreateShortURLParams>({
     originalUrl: "",
     slug: "",
     expiresAt: undefined,
-    showAdvanced: false,
     utmParameters: {}
   });
 
@@ -41,6 +41,19 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
   const [clipboardAvailable, setClipboardAvailable] = useState<boolean>(false);
   const [urlMetadata, setUrlMetadata] = useState<UrlMetadata | null>(null);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState<boolean>(false);
+
+  // Add new state for popups and modal
+  const [showSlugPopup, setShowSlugPopup] = useState(false);
+  const [showExpirationPopup, setShowExpirationPopup] = useState(false);
+  const [showUTMModal, setShowUTMModal] = useState(false);
+
+  // Refs for popup containers
+  const slugPopupRef = useRef<HTMLDivElement>(null);
+  const expirationPopupRef = useRef<HTMLDivElement>(null);
+
+  // Close popups when clicking outside
+  useOnClickOutside(slugPopupRef, () => setShowSlugPopup(false));
+  useOnClickOutside(expirationPopupRef, () => setShowExpirationPopup(false));
 
   // Check if clipboard API is available
   useEffect(() => {
@@ -129,21 +142,6 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
     return true;
   };
 
-  const handleUtmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      utmParameters: {
-        ...prev.utmParameters,
-        [name]: value
-      }
-    }));
-  };
-
-  const toggleAdvanced = () => {
-    setFormData(prev => ({ ...prev, showAdvanced: !prev.showAdvanced }));
-  };
-
   const handlePasteUrl = async () => {
     if (clipboardAvailable) {
       try {
@@ -201,43 +199,54 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
   const previewUrl = `${baseUrl}/${previewSlug}`;
 
   return (
-    <div className="max-w-2xl mx-auto rounded-xl shadow-sm bg-white border border-gray-100">
-      <div className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="max-w-2xl mx-auto rounded-2xl shadow-sm bg-white/95 backdrop-blur border border-purple-100/20">
+      <div className="p-6 sm:p-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* URL Input and Preview Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-base font-medium text-gray-800 mb-2">
               URL to Shorten
             </label>
-            <div className={`relative rounded-md shadow-sm ${urlError ? 'ring-2 ring-red-100' : formData.originalUrl && !urlError ? 'ring-2 ring-green-100' : ''}`}>
+            <div className={`relative rounded-lg ${
+              urlError ? 'ring-2 ring-red-100' : 
+              formData.originalUrl && !urlError ? 'ring-2 ring-purple-100' : ''
+            }`}>
               <input
                 type="text"
                 name="originalUrl"
                 value={formData.originalUrl}
                 onChange={handleInputChange}
                 placeholder="https://example.com/very-long-url"
-                className={`block w-full px-4 py-3 pr-16 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 border-gray-200 transition-colors ${
-                  urlError ? 'border-red-300 text-red-800 placeholder-red-300' : 
-                  formData.originalUrl && !urlError ? 'border-green-300' : 'border-gray-200'
-                }`}
+                className={`block w-full px-4 py-3 pr-16 rounded-lg bg-white/50 
+                  focus:ring-2 focus:ring-purple-100 focus:border-purple-300 
+                  border transition-all duration-200 ${
+                    urlError ? 'border-red-200 text-red-800 placeholder-red-200' : 
+                    formData.originalUrl && !urlError ? 'border-purple-200' : 'border-gray-200 hover:border-gray-300'
+                  }`}
                 required
               />
               {clipboardAvailable && (
                 <button
                   type="button"
                   onClick={handlePasteUrl}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-purple-600"
+                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 
+                    hover:text-purple-600 transition-colors group"
                   title="Paste from clipboard"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
                     <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
                   </svg>
+                  <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs bg-gray-800 text-white 
+                    rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Paste from clipboard
+                  </span>
                 </button>
               )}
             </div>
             {urlError && <p className="mt-2 text-sm text-red-600">{urlError}</p>}
-            
-            {/* URL Preview with OpenGraph data */}
+
+            {/* URL Preview */}
             {formData.originalUrl && !urlError && (
               <div className="mt-3">
                 <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
@@ -247,221 +256,133 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
                     <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Preview</span>
                   </div>
                 </div>
-                
-                {/* OpenGraph Preview */}
-                {isLoadingMetadata ? (
-                  <div className="mt-3 p-4 border border-gray-200 rounded-md flex items-center justify-center">
-                    <div className="flex items-center space-x-2">
-                      <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span className="text-sm text-gray-600">Loading preview...</span>
-                    </div>
-                  </div>
-                ) : urlMetadata ? (
-                  <div className="mt-3 border border-gray-200 rounded-md overflow-hidden">
-                    <div className="flex flex-col sm:flex-row">
-                      {urlMetadata.image && (
-                        <div className="sm:w-1/3 max-h-36 sm:max-h-none overflow-hidden bg-gray-100">
-                          <img 
-                            src={urlMetadata.image} 
-                            alt={urlMetadata.title || "Website preview"} 
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              // Hide image on error
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div className="p-4 sm:w-2/3">
-                        {urlMetadata.favicon && (
-                          <div className="flex items-center mb-2">
-                            <img 
-                              src={urlMetadata.favicon} 
-                              alt="" 
-                              className="w-4 h-4 mr-2"
-                              onError={(e) => {
-                                // Hide favicon on error
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                            <span className="text-xs text-gray-500 truncate">
-                              {urlMetadata.siteName || new URL(formData.originalUrl).hostname}
-                            </span>
-                          </div>
-                        )}
-                        <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
-                          {urlMetadata.title || "No title available"}
-                        </h3>
-                        {urlMetadata.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {urlMetadata.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
               </div>
             )}
           </div>
 
-          <div>
-            <button
-              type="button"
-              onClick={toggleAdvanced}
-              className="text-sm text-purple-600 hover:text-purple-800 focus:outline-none flex items-center transition-colors"
-            >
-              <svg 
-                className={`w-4 h-4 mr-1 transition-transform duration-200 ${formData.showAdvanced ? 'rotate-90' : ''}`} 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 20 20" 
-                fill="currentColor"
-              >
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-              </svg>
-              {formData.showAdvanced ? 'Hide Options' : 'More Options'}
-            </button>
+          {/* Options Bar with Submit Button */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Left side - Customize buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Slug Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSlugPopup(!showSlugPopup)}
+                  className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 
+                    hover:shadow-sm hover:shadow-purple-100/50 ${
+                    formData.slug
+                      ? 'border-purple-200 bg-purple-50 text-purple-700 shadow-sm shadow-purple-100/50'
+                      : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                    </svg>
+                    Custom Slug
+                  </div>
+                </button>
 
-            {formData.showAdvanced && (
-              <div className="mt-4 space-y-4 p-5 bg-gray-50 rounded-lg border border-gray-100 animate-fadeIn transition-all duration-300">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    Custom Slug (Optional)
-                    <span className="ml-2 group relative">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        Customize the end of your short URL
-                      </span>
-                    </span>
-                  </label>
-                  <div className={`relative rounded-md shadow-sm ${slugError ? 'ring-2 ring-red-100' : ''}`}>
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 select-none">
-                      {baseUrl}/
-                    </span>
+                {/* Slug Popup */}
+                <PopupContainer
+                  isOpen={showSlugPopup}
+                  onClose={() => setShowSlugPopup(false)}
+                  title="Custom Slug"
+                  popupRef={slugPopupRef}
+                >
+                  <div className={`relative rounded-lg ${slugError ? 'ring-2 ring-red-100' : ''}`}>
                     <input
                       type="text"
                       name="slug"
                       value={formData.slug}
                       onChange={handleInputChange}
                       placeholder="custom-slug"
-                      className={`block w-full pl-[calc(1.5rem+${baseUrl.length/3}ch)] px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors ${
-                        slugError ? 'border-red-300 text-red-600' : ''
-                      }`}
+                      className={`block w-full pl-[calc(1.5rem+${window.location.origin.length/3}ch)] px-4 py-2.5 
+                        bg-white/50 border rounded-lg transition-all duration-200
+                        focus:ring-2 focus:ring-purple-100 focus:border-purple-300 
+                        ${slugError ? 'border-red-200 text-red-600' : 'border-gray-200 hover:border-gray-300'}`}
                     />
                   </div>
-                  {slugError && <p className="mt-1 text-xs text-red-600">{slugError}</p>}
+                  {slugError && <p className="mt-2 text-xs text-red-600">{slugError}</p>}
                   {!slugError && (
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-2 text-xs text-gray-500">
                       Leave empty to generate a random slug
                     </p>
                   )}
-                </div>
+                </PopupContainer>
+              </div>
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    Expiration (Optional)
-                    <span className="ml-2 group relative">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        URL will stop working after this date
-                      </span>
-                    </span>
-                  </label>
+              {/* Expiration Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowExpirationPopup(!showExpirationPopup)}
+                  className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                    formData.expiresAt
+                      ? 'border-purple-200 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    Expiration
+                  </div>
+                </button>
+
+                {/* Expiration Popup */}
+                <PopupContainer
+                  isOpen={showExpirationPopup}
+                  onClose={() => setShowExpirationPopup(false)}
+                  title="Expiration Date & Time"
+                  popupRef={expirationPopupRef}
+                >
                   <input
                     type="datetime-local"
                     name="expiresAt"
                     value={formData.expiresAt as unknown as string || ""}
                     onChange={handleInputChange}
                     min={new Date().toISOString().slice(0, 16)}
-                    className="block w-full px-4 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors"
+                    className="block w-full px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors"
                   />
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                    UTM Parameters (Optional)
-                    <span className="ml-2 group relative">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        Track campaigns with these parameters
-                      </span>
-                    </span>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Link will expire after this date and time
                   </p>
-                  <p className="text-xs text-gray-500 mb-3">Add tracking parameters to your URL for analytics</p>
-
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Source</label>
-                        <input
-                          type="text"
-                          name="utm_source"
-                          value={formData.utmParameters?.utm_source || ""}
-                          onChange={handleUtmChange}
-                          placeholder="e.g., twitter"
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Medium</label>
-                        <input
-                          type="text"
-                          name="utm_medium"
-                          value={formData.utmParameters?.utm_medium || ""}
-                          onChange={handleUtmChange}
-                          placeholder="e.g., social"
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Campaign</label>
-                        <input
-                          type="text"
-                          name="utm_campaign"
-                          value={formData.utmParameters?.utm_campaign || ""}
-                          onChange={handleUtmChange}
-                          placeholder="e.g., summer_sale"
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Content</label>
-                        <input
-                          type="text"
-                          name="utm_content"
-                          value={formData.utmParameters?.utm_content || ""}
-                          onChange={handleUtmChange}
-                          placeholder="e.g., link_bio"
-                          className="block w-full px-3 py-2 border border-gray-200 rounded-md focus:ring focus:ring-purple-100 focus:border-purple-400 transition-colors text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </PopupContainer>
               </div>
-            )}
-          </div>
 
-          <div className="pt-3">
+              {/* UTM Parameters Button */}
+              <button
+                type="button"
+                onClick={() => setShowUTMModal(true)}
+                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  Object.values(formData.utmParameters || {}).some(v => v)
+                    ? 'border-purple-200 bg-purple-50 text-purple-700'
+                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                }`}
+              >
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" />
+                    <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z" />
+                  </svg>
+                  UTM Parameters
+                </div>
+              </button>
+            </div>
+
+            {/* Right side - Submit button */}
             <button
               type="submit"
               disabled={isLoading || !!urlError || !!slugError}
-              className={`w-full bg-purple-600 text-white py-3 px-6 rounded-md shadow-sm transition-all
-              ${(isLoading || !!urlError || !!slugError)
-                ? 'opacity-70 cursor-not-allowed' 
-                : 'hover:bg-purple-700 active:bg-purple-800 hover:shadow'
-              } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 font-medium`}
+              className={`bg-purple-600 text-white py-2.5 px-6 rounded-lg shadow-sm 
+                shadow-purple-200/50 transition-all duration-200 whitespace-nowrap flex-shrink-0
+                ${(isLoading || !!urlError || !!slugError)
+                  ? 'opacity-70 cursor-not-allowed' 
+                  : 'hover:bg-purple-700 active:bg-purple-800 hover:shadow-md hover:shadow-purple-200/50'
+                } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 font-medium`}
             >
               {isLoading ? 
                 <span className="flex items-center justify-center">
@@ -475,8 +396,77 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
               }
             </button>
           </div>
+
+          {/* OpenGraph Preview */}
+          {formData.originalUrl && !urlError && (
+            <div>
+              {isLoadingMetadata ? (
+                <div className="mt-3 p-4 border border-gray-200 rounded-md flex items-center justify-center">
+                  <div className="flex items-center space-x-2">
+                    <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-sm text-gray-600">Loading preview...</span>
+                  </div>
+                </div>
+              ) : urlMetadata ? (
+                <div className="mt-3 border border-gray-200 rounded-md overflow-hidden">
+                  <div className="flex flex-col sm:flex-row">
+                    {urlMetadata.image && (
+                      <div className="sm:w-1/3 max-h-36 sm:max-h-none overflow-hidden bg-gray-100">
+                        <img 
+                          src={urlMetadata.image} 
+                          alt={urlMetadata.title || "Website preview"} 
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // Hide image on error
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="p-4 sm:w-2/3">
+                      {urlMetadata.favicon && (
+                        <div className="flex items-center mb-2">
+                          <img 
+                            src={urlMetadata.favicon} 
+                            alt="" 
+                            className="w-4 h-4 mr-2"
+                            onError={(e) => {
+                              // Hide favicon on error
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                          <span className="text-xs text-gray-500 truncate">
+                            {urlMetadata.siteName || new URL(formData.originalUrl).hostname}
+                          </span>
+                        </div>
+                      )}
+                      <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
+                        {urlMetadata.title || "No title available"}
+                      </h3>
+                      {urlMetadata.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {urlMetadata.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
         </form>
       </div>
+
+      {/* UTM Parameters Modal */}
+      <UTMParametersModal
+        isOpen={showUTMModal}
+        onClose={() => setShowUTMModal(false)}
+        utmParameters={formData.utmParameters ?? {}}
+        onChange={(params) => setFormData(prev => ({ ...prev, utmParameters: params }))}
+      />
     </div>
   );
 }
