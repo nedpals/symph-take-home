@@ -1,6 +1,7 @@
 import { FC, useState } from 'react';
 import PopupContainer from '../PopupContainer';
 import ExpirationModal from './ExpirationModal';
+import { cn } from '../../utils';
 
 export const EXPIRATION_OPTIONS = [
   { label: '1 hour', duration: 1 * 60 * 60 * 1000 },
@@ -11,6 +12,7 @@ export const EXPIRATION_OPTIONS = [
 ] as const;
 
 export default function ExpirationPopup({
+  className,
   isOpen,
   onClose,
   hasExpiration,
@@ -24,6 +26,7 @@ export default function ExpirationPopup({
   onClose: () => void;
   hasExpiration: boolean;
   customDate?: string;
+  className?: string;
   onOptionSelect: (duration: number | null) => void;
   onCustomDateSelect: (date: string) => void;
   onRemove: () => void;
@@ -44,7 +47,7 @@ export default function ExpirationPopup({
   };
 
   return (
-    <div className="relative">
+    <div className={cn(className, "relative")}>
       {render({
         onClick: () => onClose(),
         hasExpiration,
