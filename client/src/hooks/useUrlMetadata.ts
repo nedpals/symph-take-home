@@ -59,20 +59,23 @@ export function useUrlMetadata(url: string, delay: number = 0) {
     if (!url) {
       setMetadata(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
+    setError(null);
 
     const fetchData = async () => {
       // Check cache first
       const cache = loadCachedMetadata();
       if (cache[url] && Date.now() - cache[url].timestamp < CACHE_EXPIRY) {
         setMetadata(cache[url].data);
+        setIsLoading(false);
         return;
       }
       
       try {
-        setIsLoading(true);
-        setError(null);
         const data = await fetchUrlMetadata(url);
         setMetadata(data);
         saveMetadataToCache(url, data);
