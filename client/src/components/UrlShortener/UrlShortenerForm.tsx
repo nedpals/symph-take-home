@@ -5,15 +5,7 @@ import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 import UtmParametersModal from './UtmParametersModal';
 import PopupContainer from '../PopupContainer';
-import ExpirationModal from "./ExpirationModal";
-
-const EXPIRATION_OPTIONS = [
-  { label: '1 hour', duration: 1 * 60 * 60 * 1000 }, // 1 hour
-  { label: '24 hours', duration: 24 * 60 * 60 * 1000 }, // 1 day
-  { label: '7 days', duration: 7 * 24 * 60 * 60 * 1000 }, // 7 days
-  { label: '30 days', duration: 30 * 24 * 60 * 60 * 1000 }, // 30 days
-  { label: 'Custom date', duration: null },
-] as const;
+import ExpirationPopup, { EXPIRATION_OPTIONS } from './ExpirationPopup';
 
 const formatCustomDate = (date: string) => {
   const d = new Date(date);
@@ -84,7 +76,6 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
   const [showSlugPopup, setShowSlugPopup] = useState(false);
   const [showExpirationPopup, setShowExpirationPopup] = useState(false);
   const [showUTMModal, setShowUTMModal] = useState(false);
-  const [showExpirationModal, setShowExpirationModal] = useState(false);
 
   // Refs for popup containers
   const slugPopupRef = useRef<HTMLDivElement>(null);
@@ -319,83 +310,60 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                 </PopupContainer>
               </div>
 
-              {/* Expiration Button */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowExpirationPopup(!showExpirationPopup)}
-                  className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
-                    flex items-center ${
-                    formData.expireDurationMs || formData.expiresAt
-                      ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
-                      : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
-                  }`}
-                >
-                  <svg className="w-4 h-4 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="truncate">
-                    {customExpirationDate ? formatCustomDate(customExpirationDate) : formatDurationOrDate(formData.expireDurationMs, formData.expiresAt)}
-                  </span>
-                </button>
-
-                {/* Expiration Popup */}
-                <PopupContainer
-                  isOpen={showExpirationPopup}
-                  onClose={() => setShowExpirationPopup(false)}
-                  title="Expiration Time"
-                  popupRef={expirationPopupRef}
-                >
-                  <div className="space-y-2">
-                    {EXPIRATION_OPTIONS.map((option) => (
-                      <button
-                        key={option.label}
-                        type="button"
-                        onClick={() => {
-                          if (option.duration) {
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              expireDurationMs: option.duration,
-                              expiresAt: undefined
-                            }));
-                            setCustomExpirationDate("");
-                            setShowExpirationPopup(false);
-                          } else {
-                            setShowExpirationModal(true);
-                          }
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm rounded-lg 
-                          hover:bg-purple-50 hover:text-purple-700 transition-colors
-                          flex items-center space-x-2"
-                      >
-                        <span>{option.label}</span>
-                        {option.duration === null && (
-                          <svg className="w-3.5 h-3.5 ml-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
-                    {(formData.expireDurationMs || formData.expiresAt) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            expireDurationMs: undefined,
-                            expiresAt: undefined 
-                          }));
-                          setShowExpirationPopup(false);
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm rounded-lg 
-                          text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        Remove Expiration
-                      </button>
-                    )}
-                  </div>
-                </PopupContainer>
-              </div>
+              {/* Expiration Button and Popup */}
+              <ExpirationPopup
+                isOpen={showExpirationPopup}
+                onClose={() => setShowExpirationPopup(false)}
+                popupRef={expirationPopupRef}
+                hasExpiration={Boolean(formData.expireDurationMs || formData.expiresAt)}
+                customDate={customExpirationDate}
+                onOptionSelect={(duration) => {
+                  if (duration) {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      expireDurationMs: duration,
+                      expiresAt: undefined
+                    }));
+                    setCustomExpirationDate("");
+                  }
+                }}
+                onCustomDateSelect={(value) => {
+                  setCustomExpirationDate(value);
+                  setFormData(prev => ({ 
+                    ...prev,
+                    expireDurationMs: undefined,
+                    expiresAt: new Date(value) 
+                  }));
+                }}
+                onRemove={() => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    expireDurationMs: undefined,
+                    expiresAt: undefined 
+                  }));
+                  setCustomExpirationDate("");
+                  setShowExpirationPopup(false);
+                }}
+                render={({ hasExpiration }) => (
+                  <button
+                    type="button"
+                    onClick={() => setShowExpirationPopup(!showExpirationPopup)}
+                    className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
+                      flex items-center ${
+                      hasExpiration
+                        ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
+                        : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
+                    }`}
+                  >
+                    <svg className="w-4 h-4 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    <span className="truncate">
+                      {customExpirationDate ? formatCustomDate(customExpirationDate) : formatDurationOrDate(formData.expireDurationMs, formData.expiresAt)}
+                    </span>
+                  </button>
+                )}
+              />
 
               {/* UTM Parameters Button */}
               <button
@@ -509,18 +477,6 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
         onClose={() => setShowUTMModal(false)}
         utmParameters={formData.utmParameters ?? {}}
         onChange={(params) => setFormData(prev => ({ ...prev, utmParameters: params }))}
-      />
-
-      {/* Expiration Modal */}
-      <ExpirationModal
-        isOpen={showExpirationModal}
-        onClose={() => setShowExpirationModal(false)}
-        value={customExpirationDate ? customExpirationDate : formData.expireDurationMs ? new Date(Date.now() + formData.expireDurationMs).toISOString().slice(0, 16) : ""}
-        onChange={(value) => {
-          setCustomExpirationDate(value);
-          setShowExpirationModal(false);
-          setShowExpirationPopup(false);
-        }}
       />
     </div>
   );
