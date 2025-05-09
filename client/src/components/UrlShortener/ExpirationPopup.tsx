@@ -54,30 +54,35 @@ export default function ExpirationPopup({
         isOpen={isOpen}
         onClose={onClose}
         title="Expiration Time">
-        <div className="space-y-2">
+        <div className="space-y-0.5">
           {EXPIRATION_OPTIONS.map((option) => (
             <button
               key={option.label}
               type="button"
               onClick={() => handleOptionSelect(option.duration)}
-              className="w-full text-left px-4 py-2.5 text-sm rounded-lg 
-                hover:bg-purple-50 hover:text-purple-700 transition-colors
-                flex items-center space-x-2"
+              className="w-full text-left px-3 py-2 text-sm rounded-md
+                text-gray-700 hover:text-purple-700 hover:bg-purple-50 active:bg-purple-100 
+                transition-colors flex items-center group relative"
             >
-              <span>{option.label}</span>
-              {option.duration === null && (
-                <svg className="w-3.5 h-3.5 ml-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <span className="font-medium">{option.label}</span>
+              {option.duration === null ? (
+                <svg className="w-4 h-4 ml-auto text-gray-400 group-hover:text-purple-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
+              ) : (
+                <span className="ml-auto text-xs text-gray-400 group-hover:text-purple-500">Select</span>
               )}
             </button>
           ))}
           {hasExpiration && (
             <button
               type="button"
-              onClick={onRemove}
-              className="w-full text-left px-4 py-2.5 text-sm rounded-lg 
-                text-red-600 hover:bg-red-50 transition-colors"
+              onClick={() => {
+                onRemove();
+                onClose();
+              }}
+              className="w-full text-left px-3 py-2 text-sm rounded-md font-medium
+                text-red-600 hover:bg-red-50 active:bg-red-100 transition-colors"
             >
               Remove Expiration
             </button>
