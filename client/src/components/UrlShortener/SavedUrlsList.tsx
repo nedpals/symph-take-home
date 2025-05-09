@@ -5,6 +5,7 @@ import { apiEndpointURL, createURL } from '../../api_utils';
 import OpenGraphPreview from '../common/OpenGraphPreview';
 import { URLMetadata } from '../../../../shared/types/url_metadata';
 import Tooltip from '../common/Tooltip';
+import { useClipboard } from '../../hooks/useClipboard';
 
 const timeAgo = (timestamp: number): string => {
   const now = new Date();
@@ -35,6 +36,7 @@ export default function SavedUrlsList({
   onRemove: (id: string) => void;
   isLoadingMetadata?: Record<string, boolean>;
 }) {
+  const { copyToClipboard } = useClipboard();
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<URLStats | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
@@ -135,9 +137,7 @@ export default function SavedUrlsList({
                 >
                   <Tooltip content="Copy to clipboard">
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(createURL(shortUrl.slug));
-                      }}
+                      onClick={() => copyToClipboard(createURL(shortUrl.slug))}
                       className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-lg"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">

@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { ShortURL } from "../../../../shared/types/url_shortener";
 import { createURL } from "../../api_utils";
 import { useUrlMetadata } from "../../hooks/useUrlMetadata";
 import OpenGraphPreview from "../common/OpenGraphPreview";
 import { cn } from "../../utils";
+import { useClipboard } from '../../hooks/useClipboard';
 
 export default function UrlShortenerResult({
   shortUrl,
@@ -14,18 +14,12 @@ export default function UrlShortenerResult({
   originalUrl: string;
   onReset: () => void;
 }) {
-  const [copied, setCopied] = useState(false);
   const formattedShortUrl = createURL(shortUrl.slug);
+  const { copied, copyToClipboard } = useClipboard();
   const { metadata, isLoading } = useUrlMetadata(originalUrl);
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(formattedShortUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-    }
+  const handleCopy = () => {
+    copyToClipboard(formattedShortUrl);
   };
 
   return (

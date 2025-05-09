@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
 import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
+import { useClipboard } from '../../hooks/useClipboard';
 import UtmParametersModal from './UtmParametersModal';
 import PopupContainer from '../PopupContainer';
 import ExpirationPopup, { EXPIRATION_OPTIONS } from './ExpirationPopup';
@@ -64,9 +65,9 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
     expireDurationMs: undefined
   });
 
+  const { clipboardAvailable, pasteFromClipboard } = useClipboard();
   const [urlError, setUrlError] = useState<string>("");
   const [slugError, setSlugError] = useState<string>("");
-  const [clipboardAvailable, setClipboardAvailable] = useState<boolean>(false);
   
   const { metadata: urlMetadata, isLoading: isLoadingMetadata } = useUrlMetadata(
     isValidUrl(formData.originalUrl) ? formData.originalUrl : '',
@@ -75,13 +76,6 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
 
   const [currentPopup, setCurrentPopup] = useState<PopupType>(null);
   const [customExpirationDate, setCustomExpirationDate] = useState<string>("");
-
-  // Check if clipboard API is available
-  useEffect(() => {
-    setClipboardAvailable(
-      navigator.clipboard && typeof navigator.clipboard.readText === 'function'
-    );
-  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -130,15 +124,9 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
   };
 
   const handlePasteUrl = async () => {
-    if (clipboardAvailable) {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text && validateUrl(text)) {
-          setFormData(prev => ({ ...prev, originalUrl: text }));
-        }
-      } catch (err) {
-        console.error("Failed to read clipboard:", err);
-      }
+    const text = await pasteFromClipboard();
+    if (text && validateUrl(text)) {
+      setFormData(prev => ({ ...prev, originalUrl: text }));
     }
   };
 
@@ -175,7 +163,6 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
         ? new Date(formData.expiresAt)
         : undefined;
 
-    // Submit form data without showAdvanced property
     const submitData = {
       originalUrl: formData.originalUrl,
       slug: formData.slug,
