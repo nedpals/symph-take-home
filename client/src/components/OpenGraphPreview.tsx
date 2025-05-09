@@ -45,7 +45,7 @@ export default function OpenGraphPreview({
 
   if (isLoading) {
     return (
-      <div className="border border-gray-100 rounded-lg p-3 flex items-center justify-center h-12">
+      <div className="border border-gray-100 rounded-lg p-3 flex items-center justify-center h-24">
         <div className="flex items-center space-x-2">
           <svg className="animate-spin h-4 w-4 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -65,8 +65,20 @@ export default function OpenGraphPreview({
     );
   }
   
-  // If no metadata to display (after considering initial and fetched)
-  if (!displayMetadata) return null; 
+  // If no metadata to display, display the URL as the title
+  if (!displayMetadata) {
+    if (!isValidUrl(url)) {
+      // Return nothing if the URL is invalid
+      return null;
+    }
+
+    return (
+      <div className="border border-gray-100 rounded-lg p-3">
+        <span className="text-xs text-gray-500">{hostname}</span>
+        <p className="truncate text-lg">{url}</p>
+      </div>
+    );
+  }
   
   if (compact) {
     return (
