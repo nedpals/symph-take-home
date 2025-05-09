@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUrlMetadata } from "../hooks/useUrlMetadata";
-import { URLMetadata } from "../../../shared/types/url_metadata"; // Ensure URLMetadata is imported
+import { URLMetadata } from "../../../shared/types/url_metadata";
+import { isValidUrl } from "../api_utils";
 
 export default function OpenGraphPreview({ 
   url, 
@@ -13,32 +14,34 @@ export default function OpenGraphPreview({
   initialMetadata?: URLMetadata | null;
   debounceDelay?: number;
 }) {
-  const { metadata: fetchedMetadata, isLoading: hookIsLoading, error } = useUrlMetadata(url, debounceDelay); 
-  const [displayMetadata, setDisplayMetadata] = useState<URLMetadata | null | undefined>(initialMetadata);
+  const { metadata: fetchedMetadata, isLoading: hookIsLoading, error } = useUrlMetadata(isValidUrl(url) ? url : '', debounceDelay); 
   const [displayFavicon, setDisplayFavicon] = useState<string | undefined | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const isLoading = useMemo(() => hookIsLoading && typeof initialMetadata === 'undefined', [hookIsLoading, initialMetadata]);
+
+  const displayMetadata = useMemo(() => {
+    if (fetchedMetadata) {
+      return fetchedMetadata;
+    }
+    if (initialMetadata) {
+      return initialMetadata;
+    }
+    return null;
+  }, [fetchedMetadata, initialMetadata]);
 
   useEffect(() => {
-    if (initialMetadata !== undefined) {
-      setDisplayMetadata(initialMetadata);
-      setDisplayFavicon(initialMetadata?.favicon ?? null);
+    if (displayMetadata) {
+      setDisplayFavicon(displayMetadata?.favicon ?? null);
     }
-  }, [initialMetadata]);
-
-  useEffect(() => {
-    if (fetchedMetadata !== undefined) {
-      setDisplayMetadata(fetchedMetadata);
-      setDisplayFavicon(fetchedMetadata?.favicon ?? null);
+  }, [displayMetadata]);
+  
+  // Generate hostname from URL for display
+  const hostname = (() => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return url;
     }
-  }, [fetchedMetadata]);
-
-  useEffect(() => {
-    if (hookIsLoading && displayMetadata === undefined) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
-  }, [hookIsLoading, displayMetadata]);
+  })();
 
   if (isLoading) {
     return (
@@ -64,15 +67,6 @@ export default function OpenGraphPreview({
   
   // If no metadata to display (after considering initial and fetched)
   if (!displayMetadata) return null; 
-  
-  // Generate hostname from URL for display
-  const hostname = (() => {
-    try {
-      return new URL(url).hostname;
-    } catch {
-      return url;
-    }
-  })();
   
   if (compact) {
     return (
@@ -138,7 +132,7 @@ export default function OpenGraphPreview({
           <h4 className="text-sm font-medium text-gray-700 line-clamp-1">
             {displayMetadata.title || "No title available"}
           </h4>
-          <p className="truncate text-xs mt-auto text-gray-500">{displayMetadata.url}</p>
+          <p className="truncate text-xs mt-auto text-gray-500">{displayMetadata.description}</p>
         </div>
       </div>
     </div>
