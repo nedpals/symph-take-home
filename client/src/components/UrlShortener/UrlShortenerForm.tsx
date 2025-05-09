@@ -3,10 +3,11 @@ import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/ur
 import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 import { useClipboard } from '../../hooks/useClipboard';
-import UtmParametersModal from './UtmParametersModal';
-import PopupContainer from '../PopupContainer';
-import ExpirationPopup, { EXPIRATION_OPTIONS } from './ExpirationPopup';
 import { cn } from "../../utils";
+import OpenGraphPreview from '../OpenGraphPreview';
+import PopupContainer from '../PopupContainer';
+import UtmParametersModal from './UtmParametersModal';
+import ExpirationPopup, { EXPIRATION_OPTIONS } from './ExpirationPopup';
 
 const formatCustomDate = (date: string) => {
   const d = new Date(date);
@@ -421,61 +422,11 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
             )}
 
             {/* OpenGraph Preview */}
-            {isLoadingMetadata ? (
-              <div className="p-4 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
-                <div className="flex items-center space-x-2">
-                  <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span className="text-sm text-gray-600">Loading preview...</span>
-                </div>
-              </div>
-            ) : urlMetadata ? (
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div className="flex flex-col sm:flex-row">
-                  {urlMetadata.image && (
-                    <div className="sm:w-1/3 max-h-36 sm:max-h-none overflow-hidden bg-gray-100">
-                      <img 
-                        src={urlMetadata.image} 
-                        alt={urlMetadata.title || "Website preview"} 
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          // Hide image on error
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="p-4 sm:w-2/3">
-                    {urlMetadata.favicon && (
-                      <div className="flex items-center mb-2">
-                        <img 
-                          src={urlMetadata.favicon} 
-                          alt="" 
-                          className="w-4 h-4 mr-2"
-                          onError={(e) => {
-                            // Hide favicon on error
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        <span className="text-xs text-gray-500 truncate">
-                          {urlMetadata.siteName || new URL(formData.originalUrl).hostname}
-                        </span>
-                      </div>
-                    )}
-                    <h3 className="font-medium text-gray-900 mb-1 line-clamp-2">
-                      {urlMetadata.title || "No title available"}
-                    </h3>
-                    {urlMetadata.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {urlMetadata.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : null}
+            <OpenGraphPreview
+              url={formData.originalUrl}
+              metadata={urlMetadata}
+              isLoading={isLoadingMetadata}
+            />
           </div>
         )}
       </form>
