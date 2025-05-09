@@ -63,7 +63,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-indigo-600 mb-8">
           symph.ly
         </h2>

@@ -4,14 +4,12 @@ import { createURL } from '../../api_utils';
 import OpenGraphPreview from '../common/OpenGraphPreview';
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 
-interface Props {
+export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: {
   isOpen: boolean;
   onClose: () => void;
   stats: URLStats | null;
   isLoading: boolean;
-}
-
-export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Props) {
+}) {
   // Use the useUrlMetadata hook to fetch and cache metadata for the original URL
   const { metadata, isLoading: isMetadataLoading } = useUrlMetadata(stats?.originalURL || '');
   
@@ -27,9 +25,64 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Pr
 
   if (!stats) {
     return (
-      <BaseModal isOpen={isOpen} onClose={onClose} title="URL Analytics">
-        <div className="text-center py-8 text-gray-500">
-          No analytics data available
+      <BaseModal isOpen={isOpen} onClose={onClose} title="URL Analytics" maxWidth="max-w-5xl">
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <svg
+            className="w-24 h-24 text-gray-300 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No analytics data yet</h3>
+          <p className="text-gray-500 text-center max-w-sm">
+            Share your shortened URL to start collecting analytics data. Check back later to see how your link is performing.
+          </p>
+        </div>
+      </BaseModal>
+    );
+  }
+
+  // Add new condition for zero clicks
+  if (stats && stats.clicks.total === 0) {
+    return (
+      <BaseModal 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        title="URL Analytics"
+        description={`Analytics for ${createURL(stats.slug)}`}
+        className="max-w-5xl"
+      >
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <svg
+            className="w-24 h-24 text-purple-100 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Waiting for first click</h3>
+          <p className="text-gray-500 text-center max-w-sm">
+            Your link <span className="text-purple-600 font-medium">{createURL(stats.slug)}</span> has been created but hasn't received any clicks yet. Share it to start tracking!
+          </p>
+          <button
+            onClick={() => navigator.clipboard.writeText(createURL(stats.slug))}
+            className="mt-6 px-4 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors"
+          >
+            Copy Link to Share
+          </button>
         </div>
       </BaseModal>
     );
@@ -41,8 +94,9 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Pr
       onClose={onClose} 
       title="URL Analytics"
       description={`Analytics for ${createURL(stats.slug)}`}
+      maxWidth="max-w-5xl"
     >
-      <div className="space-y-6">
+      <div className="space-y-6 px-2">
         {/* URL Preview */}
         <div className="mb-4">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Original URL</h3>

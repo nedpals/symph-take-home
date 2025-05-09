@@ -3,7 +3,7 @@ import { ShortURL } from '../../../shared/types/url_shortener';
 import { URLMetadata } from '../../../shared/types/url_metadata';
 import { fetchUrlMetadata } from '../api_utils';
 
-interface SavedUrl {
+interface CachedURLEntry {
   shortUrl: ShortURL;
   originalUrl: string;
   savedAt: number;
@@ -13,7 +13,7 @@ interface SavedUrl {
 const STORAGE_KEY = 'saved_urls';
 
 export function useSavedUrls() {
-  const [savedUrls, setSavedUrls] = useState<SavedUrl[]>([]);
+  const [savedUrls, setSavedUrls] = useState<CachedURLEntry[]>([]);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export function useSavedUrls() {
   }, [savedUrls, isLoadingMetadata]);
 
   const saveUrl = (shortUrl: ShortURL, originalUrl: string, metadata?: URLMetadata) => {
-    const newUrl: SavedUrl = {
+    const newUrl: CachedURLEntry = {
       shortUrl,
       originalUrl,
       savedAt: Date.now(),

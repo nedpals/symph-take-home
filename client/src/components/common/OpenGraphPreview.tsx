@@ -78,7 +78,7 @@ export default function OpenGraphPreview({
     <div className="border border-gray-100 rounded-lg overflow-hidden transition-all">
       <div className="flex">
         {cachedMetadata.image && (
-          <div className="w-1/4 max-h-16 overflow-hidden bg-gray-50">
+          <div className="w-1/4 h-24 overflow-hidden bg-gray-50">
             <img 
               src={cachedMetadata.image} 
               alt={cachedMetadata.title || "Website preview"} 
@@ -87,7 +87,7 @@ export default function OpenGraphPreview({
             />
           </div>
         )}
-        <div className="p-2 flex-1">
+        <div className="p-3 w-3/4 flex flex-col">
           <div className="flex items-center mb-1">
             {cachedMetadata.favicon ? (
               <img 
@@ -112,9 +112,10 @@ export default function OpenGraphPreview({
               {cachedMetadata.siteName || hostname}
             </span>
           </div>
-          <h4 className="text-xs font-medium text-gray-700 line-clamp-1">
+          <h4 className="text-sm font-medium text-gray-700 line-clamp-1">
             {cachedMetadata.title || "No title available"}
           </h4>
+          <p className="truncate text-xs mt-auto text-gray-500">{cachedMetadata.url}</p>
         </div>
       </div>
     </div>
