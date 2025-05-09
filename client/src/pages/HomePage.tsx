@@ -64,12 +64,15 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-medium text-gray-800 mb-2">
-            URL Shortener
+        <h2 className="text-2xl font-bold text-center text-indigo-600 mb-8">
+          symph.ly
+        </h2>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+            Transform Your Long URLs
           </h1>
-          <p className="text-gray-600">
-            Create concise, shareable links with optional custom parameters
+          <p className="text-lg text-gray-600 max-w-xl mx-auto">
+            Create memorable, short links in seconds. Perfect for social media, emails, and anywhere you need concise URLs.
           </p>
         </div>
         
