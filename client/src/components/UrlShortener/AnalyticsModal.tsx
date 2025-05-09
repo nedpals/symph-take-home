@@ -10,7 +10,6 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: {
   stats: URLStats | null;
   isLoading: boolean;
 }) {
-  // Use the useUrlMetadata hook to fetch and cache metadata for the original URL
   const { metadata, isLoading: isMetadataLoading } = useUrlMetadata(stats?.originalURL || '');
   
   if (isLoading) {
@@ -49,7 +48,6 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: {
     );
   }
 
-  // Add new condition for zero clicks
   if (stats && stats.clicks.total === 0) {
     return (
       <BaseModal 
