@@ -3,7 +3,7 @@ import { ShortURL, URLStats } from '../../../../shared/types/url_shortener';
 import AnalyticsModal from './AnalyticsModal';
 import { apiEndpointURL, createURL } from '../../api_utils';
 import OpenGraphPreview from '../common/OpenGraphPreview';
-import { URLMetadata } from '../../hooks/useUrlMetadata';
+import { URLMetadata } from '../../../../shared/types/url_metadata';
 
 interface SavedURLsListProps {
   urls: Array<{
