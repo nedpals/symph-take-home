@@ -1,18 +1,16 @@
 import { URLMetadata } from "../../../../shared/types/url_metadata";
 
-interface OpenGraphPreviewProps {
-  metadata: URLMetadata | null;
-  url: string;
-  isLoading?: boolean;
-  compact?: boolean;
-}
-
 export default function OpenGraphPreview({ 
   metadata, 
   url, 
   isLoading = false,
   compact = false 
-}: OpenGraphPreviewProps) {
+}: {
+  metadata: URLMetadata | null;
+  url: string;
+  isLoading?: boolean;
+  compact?: boolean;
+}) {
   if (isLoading) {
     return (
       <div className="border border-gray-100 rounded-lg p-3 flex items-center justify-center h-12">
