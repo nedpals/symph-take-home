@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
 import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
@@ -86,6 +86,11 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear URL error when typing in URL field
+    if (name === "originalUrl") {
+      setUrlError("");
+    }
 
     // Validate slug
     if (name === "slug") {
@@ -181,38 +186,44 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
     await onSubmit(submitData);
   };
 
+  const formState = useMemo(() => {
+    if (isLoading) return 'loading';
+    if (urlError) return 'error';
+    if (slugError) return 'error';
+    if (!formData.originalUrl) return 'empty';
+    if (formData.originalUrl && isValidUrl(formData.originalUrl) && !urlError) return 'valid';
+    return 'empty';
+  }, [formData.originalUrl, urlError, slugError, isLoading]) as 'empty' | 'error' | 'valid' | 'loading';
+
   // Build a preview of what the shortened URL might look like
-  const previewSlug = formData.slug || "random-slug";
-  const previewUrl = createURL(previewSlug);
+  const previewUrl = createURL(formData.slug || "random-slug");
 
   return (
-    <div className="max-w-2xl mx-auto rounded-2xl shadow-md bg-white/95 backdrop-blur border border-purple-100/20">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* URL Input and Preview Section */}
-        <div className={cn(
-          "relative rounded-t-lg", 
-          urlError 
-            ? 'ring-2 ring-red-100' 
-            : formData.originalUrl && !urlError 
-              ? 'ring-2 ring-purple-100' : '')}>
-          <label className="block text-xs font-medium text-gray-800 mt-4 mb-2 ml-4">
+    <div className={cn(
+      "max-w-2xl mx-auto rounded-2xl shadow-md bg-white/95 backdrop-blur",
+      "border transition-all duration-200",
+      {
+        'border-red-200 ring-2 ring-red-100': formState === 'error',
+        'border-purple-200 ring-2 ring-purple-100': formState === 'valid',
+        'border-purple-100/20': formState === 'empty' || formState === 'loading'
+      }
+    )}>
+      <form onSubmit={handleSubmit}>
+        {/* URL Input Section */}
+        <div className="relative rounded-t-lg pb-2">
+          <label className="block text-xs font-medium text-gray-800 ml-4 mt-4">
             URL to Shorten
           </label>
-          <div>
+          <div className="flex items-center relative">
             <input
               type="text"
               name="originalUrl"
               value={formData.originalUrl}
               onChange={handleInputChange}
               placeholder="https://example.com/very-long-url"
-              className={cn("block w-full px-4 py-3 pr-16 bg-white/50", 
-                "focus:ring-2 focus:ring-purple-100 focus:border-purple-300",
-                "border transition-all duration-200",
-                urlError 
-                  ? 'border-red-200 text-red-800 placeholder-red-200' 
-                  : formData.originalUrl && !urlError 
-                    ? 'border-purple-200' 
-                    : 'border-gray-200 hover:border-gray-300'
+              className={cn(
+                "block w-full px-4 py-3 bg-white/50",
+                "transition-all duration-200 ring-0 focus:ring-0 focus:ring-transparent focus:ring-offset-0 focus:outline-0 focus:outline-none",
               )}
               required
             />
@@ -220,52 +231,48 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
               <button
                 type="button"
                 onClick={handlePasteUrl}
-                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 
-                  hover:text-purple-600 transition-colors group"
-                title="Paste from clipboard"
+                className={cn(
+                  "absolute right-4 top-1/2 -translate-y-1/2",
+                  "bg-gray-50 text-gray-700 px-2.5 py-1.5 rounded-lg shadow-sm",
+                  "border border-gray-200 transition-all duration-200",
+                  "hover:bg-gray-100 hover:border-gray-300 hover:shadow-md",
+                  "focus:outline-none focus:ring-2 focus:ring-purple-500/20",
+                  "flex items-center gap-2 text-sm font-medium"
+                )}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
                   <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
                 </svg>
-                <span className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs bg-gray-800 text-white 
-                  rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Paste from clipboard
-                </span>
+                Paste URL
               </button>
             )}
           </div>
-          {urlError && <p className="mt-2 text-sm text-red-600">{urlError}</p>}
-
-          {/* URL Preview */}
-          {formData.originalUrl && !urlError && (
-            <div className="mt-3">
-              <div className="p-3 bg-gray-50 rounded-md border border-gray-100">
-                <p className="text-xs text-gray-500 mb-1">Shortened URL Preview:</p>
-                <div className="flex items-center">
-                  <p className="text-sm font-medium text-gray-800 truncate">{previewUrl}</p>
-                  <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Preview</span>
-                </div>
-              </div>
+          {urlError && (
+            <div className="bg-red-50 py-2 px-4 mt-2 mb-1 flex items-start">
+              <svg className="h-5 w-5 text-red-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="ml-2 text-sm text-red-600">{urlError}</p>
             </div>
           )}
         </div>
 
         {/* Options Bar with Submit Button */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-3">
           {/* Left side - Customize buttons */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Slug Button */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setCurrentPopup(currentPopup === 'slug' ? null : 'slug')}
                 className={cn(
-                  "px-4 py-2.5 text-sm rounded-lg border transition-all duration-200", 
+                  "px-2 py-1 text-sm rounded transition-all duration-200", 
                   "flex items-center",
                   formData.slug
-                    ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
-                    : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
+                    ? 'bg-purple-50 text-purple-700 shadow-sm'
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                 )}
               >
                 <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -295,7 +302,14 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                     )}
                   />
                 </div>
-                {slugError && <p className="mt-2 text-xs text-red-600">{slugError}</p>}
+                {slugError && (
+                  <div className="mt-2 flex items-start">
+                    <svg className="h-4 w-4 text-red-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="ml-2 text-xs text-red-600">{slugError}</p>
+                  </div>
+                )}
                 {!slugError && (
                   <p className="mt-2 text-xs text-gray-500">
                     Leave empty to generate a random slug
@@ -341,11 +355,11 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                   type="button"
                   onClick={() => setCurrentPopup(currentPopup === 'expiration' ? null : 'expiration')}
                   className={cn(
-                    "px-4 py-2.5 text-sm rounded-lg border transition-all duration-200",
+                    "px-2 py-1 text-sm rounded transition-all duration-200",
                     "flex items-center",
                     hasExpiration
-                      ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
-                      : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
+                      ? 'bg-purple-50 text-purple-700 shadow-sm'
+                      : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                   )}
                 >
                   <svg className="w-4 h-4 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -362,11 +376,12 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
             <button
               type="button"
               onClick={() => setCurrentPopup('utm')}
-              className={cn("px-4 py-2.5 text-sm rounded-lg border transition-all duration-200",
+              className={cn(
+                "px-2 py-1 text-sm rounded transition-all duration-200",
                 "flex items-center",
                 Object.values(formData.utmParameters || {}).some(v => v)
-                  ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
-                  : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
+                  ? 'bg-purple-50 text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
               )}
             >
               <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -380,17 +395,17 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
           {/* Right side - Submit button */}
           <button
             type="submit"
-            disabled={isLoading || !!urlError || !!slugError}
+            disabled={formState === 'loading' || formState === 'error' || formState === 'empty'}
             className={cn(
-              "bg-purple-600 text-white py-2.5 px-6 rounded-lg shadow-sm",
+              "bg-purple-600 text-white py-2 px-6 rounded-lg shadow-sm",
               "shadow-purple-200/50 transition-all duration-200 whitespace-nowrap flex-shrink-0",
               "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 font-medium",
-              (isLoading || !!urlError || !!slugError)
-                ? 'opacity-70 cursor-not-allowed' 
-                : 'hover:bg-purple-700 active:bg-purple-800 hover:shadow-md hover:shadow-purple-200/50'
+              formState === 'valid' 
+                ? 'hover:bg-purple-700 active:bg-purple-800 hover:shadow-md hover:shadow-purple-200/50'
+                : 'opacity-50 cursor-not-allowed bg-gray-400 hover:bg-gray-400 shadow-none'
             )}
           >
-            {isLoading ? 
+            {formState === 'loading' ? 
               <span className="flex items-center justify-center">
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -398,16 +413,28 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                 </svg>
                 Shortening...
               </span> 
-              : 'Shorten URL'
+              : 'Shorten'
             }
           </button>
         </div>
 
-        {/* OpenGraph Preview */}
-        {formData.originalUrl && !urlError && (
-          <div>
+        {/* Previews Section */}
+        {formState === 'valid' && (
+          <div className="border-t border-gray-100 p-4 space-y-4">
+            {/* Shortened URL Preview - only show when custom slug is set */}
+            {formData.slug && (
+              <div className="p-4 bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <p className="text-xs font-medium text-gray-500 mb-2">Shortened URL Preview</p>
+                <div className="flex items-center">
+                  <p className="text-sm font-medium text-gray-800 truncate">{previewUrl}</p>
+                  <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">Preview</span>
+                </div>
+              </div>
+            )}
+
+            {/* OpenGraph Preview */}
             {isLoadingMetadata ? (
-              <div className="mt-3 p-4 border border-gray-200 rounded-md flex items-center justify-center">
+              <div className="p-4 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                 <div className="flex items-center space-x-2">
                   <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -417,7 +444,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                 </div>
               </div>
             ) : urlMetadata ? (
-              <div className="mt-3 border border-gray-200 rounded-md overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="flex flex-col sm:flex-row">
                   {urlMetadata.image && (
                     <div className="sm:w-1/3 max-h-36 sm:max-h-none overflow-hidden bg-gray-100">
