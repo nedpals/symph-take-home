@@ -1,6 +1,8 @@
 import BaseModal from '../common/BaseModal';
 import { URLStats } from '../../../../shared/types/url_shortener';
 import { createURL } from '../../api_utils';
+import OpenGraphPreview from '../common/OpenGraphPreview';
+import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 
 interface Props {
   isOpen: boolean;
@@ -10,6 +12,9 @@ interface Props {
 }
 
 export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Props) {
+  // Use the useUrlMetadata hook to fetch and cache metadata for the original URL
+  const { metadata, isLoading: isMetadataLoading } = useUrlMetadata(stats?.originalURL || '');
+  
   if (isLoading) {
     return (
       <BaseModal isOpen={isOpen} onClose={onClose} title="URL Analytics">
@@ -38,6 +43,21 @@ export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: Pr
       description={`Analytics for ${createURL(stats.slug)}`}
     >
       <div className="space-y-6">
+        {/* URL Preview */}
+        <div className="mb-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Original URL</h3>
+          <div className="px-1">
+            <OpenGraphPreview
+              metadata={metadata}
+              url={stats.originalURL}
+              isLoading={isMetadataLoading}
+            />
+            <div className="mt-2 text-xs text-gray-500 truncate">
+              {stats.originalURL}
+            </div>
+          </div>
+        </div>
+        
         {/* Overview Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatCard
