@@ -4,6 +4,7 @@ import AnalyticsModal from './AnalyticsModal';
 import { apiEndpointURL, createURL } from '../../api_utils';
 import OpenGraphPreview from '../common/OpenGraphPreview';
 import { URLMetadata } from '../../../../shared/types/url_metadata';
+import Tooltip from '../common/Tooltip';
 
 export default function SavedUrlsList({ 
   urls, 
@@ -68,7 +69,7 @@ export default function SavedUrlsList({
         {urls.map(({ shortUrl, originalUrl, metadata }) => (
           <div
             key={shortUrl.id}
-            className="group rounded-xl border border-gray-200/80 shadow-sm bg-white/90 hover:bg-white/95 hover:border-purple-200 hover:shadow transition-all duration-200 overflow-hidden"
+            className="group rounded-xl border border-gray-200/80 shadow-sm bg-white/90 hover:bg-white/95 hover:border-purple-200 hover:shadow transition-all duration-200"
           >
             <div className="relative p-3 sm:p-4">
               <div className="flex items-start justify-between gap-3">
@@ -109,35 +110,38 @@ export default function SavedUrlsList({
                   className="flex items-center gap-1 self-start -mr-1" 
                   onClick={e => e.stopPropagation()}
                 >
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(createURL(shortUrl.slug));
-                    }}
-                    className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-lg"
-                    title="Copy to clipboard"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleShowAnalytics(shortUrl.slug)}
-                    className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-lg"
-                    title="View analytics"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => onRemove(shortUrl.id)}
-                    className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
-                    title="Delete"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+                  <Tooltip content="Copy to clipboard">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(createURL(shortUrl.slug));
+                      }}
+                      className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m-7 0a1 1 0 0 1 1 1a1 1 0 0 1-1 1a1 1 0 0 1-1-1a1 1 0 0 1 1-1M7 7h10V5h2v14H5V5h2z"></path>
+                      </svg>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="View analytics">
+                    <button
+                      onClick={() => handleShowAnalytics(shortUrl.slug)}
+                      className="text-gray-400 hover:text-purple-600 transition-colors p-2 hover:bg-purple-50 rounded-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 10.105A1.105 1.105 0 0 1 11.105 9h1.79A1.105 1.105 0 0 1 14 10.105v9.79A1.105 1.105 0 0 1 12.895 21h-1.79A1.105 1.105 0 0 1 10 19.895zm7-6A1.105 1.105 0 0 1 18.105 3h1.79A1.105 1.105 0 0 1 21 4.105v15.79A1.105 1.105 0 0 1 19.895 21h-1.79A1.105 1.105 0 0 1 17 19.895zM3 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0"></path>
+                      </svg>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Delete URL">
+                    <button
+                      onClick={() => onRemove(shortUrl.id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             </div>
