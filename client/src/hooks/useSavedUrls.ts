@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShortURL } from '../../../shared/types/url_shortener';
-import { URLMetadata } from './useUrlMetadata';
+import { URLMetadata } from '../../../shared/types/url_metadata';
 import { fetchUrlMetadata } from '../api_utils';
 
 interface SavedUrl {

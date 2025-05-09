@@ -28,3 +28,12 @@ export async function fetchUrlMetadata(url: string) {
     return null;
   }
 }
+
+export const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
+};

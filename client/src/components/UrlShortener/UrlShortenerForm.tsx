@@ -1,31 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
-import { BACKEND_URL, createURL, fetchUrlMetadata } from "../../api_utils";
-import UTMParametersModal from './UTMParametersModal';
+import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
 import { useOnClickOutside } from '../../hooks/useOnClickOutside';
+import { useUrlMetadata } from '../../hooks/useUrlMetadata';
+import UtmParametersModal from './UtmParametersModal';
 import PopupContainer from '../PopupContainer';
 
-interface UrlMetadata {
-  title?: string;
-  description?: string;
-  image?: string;
-  siteName?: string;
-  url?: string;
-  favicon?: string;
-}
-
-
-// Debounce function to prevent too many API calls
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void => {
-  let timeoutId: number;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
-
-export default function URLShortenerForm({ onSubmit, isLoading }: {
+export default function UrlShortenerForm({ onSubmit, isLoading }: {
   onSubmit: (data: CreateShortURLParams) => Promise<void>;
   isLoading: boolean;
 }) {
@@ -39,13 +20,18 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
   const [urlError, setUrlError] = useState<string>("");
   const [slugError, setSlugError] = useState<string>("");
   const [clipboardAvailable, setClipboardAvailable] = useState<boolean>(false);
-  const [urlMetadata, setUrlMetadata] = useState<UrlMetadata | null>(null);
-  const [isLoadingMetadata, setIsLoadingMetadata] = useState<boolean>(false);
+  
+  // Replace urlMetadata and isLoadingMetadata with hook
+  const { metadata: urlMetadata, isLoading: isLoadingMetadata } = useUrlMetadata(
+    isValidUrl(formData.originalUrl) ? formData.originalUrl : '',
+    800 // debounce delay
+  );
 
   // Add new state for popups and modal
   const [showSlugPopup, setShowSlugPopup] = useState(false);
   const [showExpirationPopup, setShowExpirationPopup] = useState(false);
   const [showUTMModal, setShowUTMModal] = useState(false);
+  const [showExpirationModal, setShowExpirationModal] = useState(false);
 
   // Refs for popup containers
   const slugPopupRef = useRef<HTMLDivElement>(null);
@@ -62,40 +48,10 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
     );
   }, []);
 
-  // Fetch URL metadata when a valid URL is entered
-  const fetchMetadata = async (url: string) => {
-    if (!url || !isValidUrl(url)) return;
-    
-    setIsLoadingMetadata(true);
-    setUrlMetadata(null);
-    
-    try {
-      const metadata = await fetchUrlMetadata(url);
-      setUrlMetadata(metadata);
-    } catch (error) {
-      console.error("Error fetching metadata:", error);
-    } finally {
-      setIsLoadingMetadata(false);
-    }
-  };
-
-  // Debounced version of fetchMetadata
-  const debouncedFetchMetadata = debounce(fetchMetadata, 800);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Validate URL when changing original URL
-    if (name === "originalUrl") {
-      const isValid = validateUrl(value);
-      if (isValid && value) {
-        debouncedFetchMetadata(value);
-      } else if (!value) {
-        setUrlMetadata(null);
-      }
-    }
-    
     // Validate slug
     if (name === "slug") {
       validateSlug(value);
@@ -114,15 +70,6 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
       return true;
     } catch (_) {
       setUrlError("Please enter a valid URL (e.g., https://example.com)");
-      return false;
-    }
-  };
-
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url);
-      return true;
-    } catch (_) {
       return false;
     }
   };
@@ -148,7 +95,6 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
         const text = await navigator.clipboard.readText();
         if (text && validateUrl(text)) {
           setFormData(prev => ({ ...prev, originalUrl: text }));
-          fetchMetadata(text); // Immediately fetch metadata without debounce for paste
         }
       } catch (err) {
         console.error("Failed to read clipboard:", err);

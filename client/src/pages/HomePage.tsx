@@ -1,7 +1,7 @@
 import { useState } from "react";
-import URLShortenerForm from "../components/URLShortener/URLShortenerForm";
-import URLShortenerResult from "../components/URLShortener/URLShortenerResult";
-import SavedURLSList from "../components/URLShortener/SavedURLSList";
+import UrlShortenerForm from "../components/UrlShortener/UrlShortenerForm";
+import UrlShortenerResult from "../components/UrlShortener/UrlShortenerResult";
+import SavedUrlsList from "../components/UrlShortener/SavedUrlsList";
 import { useSavedUrls } from "../hooks/useSavedUrls";
 
 import { CreateShortURLParams, ErrorResponse, ShortenURLResponse, ShortURL } from "../../../shared/types/url_shortener";
@@ -84,17 +84,17 @@ export default function HomePage() {
         
         <div className="transition-all duration-300 ease-in-out">
           {shortUrlData ? (
-            <URLShortenerResult
+            <UrlShortenerResult
               shortUrl={shortUrlData.shortUrl}
               originalUrl={shortUrlData.originalUrl}
               onReset={resetForm}
             />
           ) : (
-            <URLShortenerForm onSubmit={createShortUrl} isLoading={isLoading} />
+            <UrlShortenerForm onSubmit={createShortUrl} isLoading={isLoading} />
           )}
         </div>
 
-        <SavedURLSList urls={savedUrls} onRemove={removeUrl} />
+        <SavedUrlsList urls={savedUrls} onRemove={removeUrl} />
       </div>
     </div>
   );

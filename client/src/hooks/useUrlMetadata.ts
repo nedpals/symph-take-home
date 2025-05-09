@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchUrlMetadata } from '../api_utils';
-
-export interface URLMetadata {
-  title?: string;
-  description?: string;
-  image?: string;
-  siteName?: string;
-  url?: string;
-  favicon?: string;
-}
+import { URLMetadata } from '../../../shared/types/url_metadata';
 
 const METADATA_CACHE_KEY = 'url_metadata_cache';
 const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -49,15 +41,28 @@ const saveMetadataToCache = (url: string, data: URLMetadata) => {
   }
 };
 
-export function useUrlMetadata(url: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const debounce = <T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void => {
+  let timeoutId: number;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
+export function useUrlMetadata(url: string, delay: number = 0) {
   const [metadata, setMetadata] = useState<URLMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!url) return;
-    
-    const fetchMetadata = async () => {
+    if (!url) {
+      setMetadata(null);
+      setError(null);
+      return;
+    }
+
+    const fetchData = async () => {
       // Check cache first
       const cache = loadCachedMetadata();
       if (cache[url] && Date.now() - cache[url].timestamp < CACHE_EXPIRY) {
@@ -79,8 +84,15 @@ export function useUrlMetadata(url: string) {
       }
     };
 
-    fetchMetadata();
-  }, [url]);
+    const debouncedFetch = delay > 0 ? debounce(fetchData, delay) : fetchData;
+    debouncedFetch();
+
+    return () => {
+      if (delay > 0) {
+        clearTimeout(debouncedFetch as unknown as number);
+      }
+    };
+  }, [url, delay]);
 
   return { metadata, isLoading, error };
 }

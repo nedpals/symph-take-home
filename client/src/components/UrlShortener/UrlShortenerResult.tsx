@@ -4,7 +4,7 @@ import { createURL } from "../../api_utils";
 import { useUrlMetadata } from "../../hooks/useUrlMetadata";
 import OpenGraphPreview from "../common/OpenGraphPreview";
 
-export default function URLShortenerResult({
+export default function UrlShortenerResult({
   shortUrl,
   originalUrl,
   onReset,

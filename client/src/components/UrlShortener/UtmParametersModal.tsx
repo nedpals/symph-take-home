@@ -1,19 +1,17 @@
 import { UTMParameters } from '../../../../shared/types/url_shortener';
 import BaseModal from '../common/BaseModal';
 
-interface UTMParametersModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  utmParameters: UTMParameters;
-  onChange: (params: UTMParameters) => void;
-}
-
-export default function UTMParametersModal({
+export default function UtmParametersModal({
   isOpen,
   onClose,
   utmParameters,
   onChange,
-}: UTMParametersModalProps) {
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  utmParameters: UTMParameters;
+  onChange: (params: UTMParameters) => void;
+}) {
   const handleChange = (key: keyof UTMParameters, value: string) => {
     onChange({
       ...utmParameters,
