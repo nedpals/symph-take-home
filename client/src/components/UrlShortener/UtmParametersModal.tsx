@@ -1,6 +1,33 @@
 import { UTMParameters } from '../../../../shared/types/url_shortener';
 import BaseModal from '../common/BaseModal';
 
+const utmParametersList = [
+  {
+    key: 'utm_source',
+    label: 'Source',
+    description: 'The referrer: e.g., google, newsletter',
+    placeholder: 'google',
+  },
+  {
+    key: 'utm_medium',
+    label: 'Medium',
+    description: 'Marketing medium: e.g., cpc, social',
+    placeholder: 'social',
+  },
+  {
+    key: 'utm_campaign',
+    label: 'Campaign',
+    description: 'Campaign name: e.g., spring_sale',
+    placeholder: 'spring_sale',
+  },
+  {
+    key: 'utm_content',
+    label: 'Content',
+    description: 'Use to differentiate similar content',
+    placeholder: 'blue_button',
+  },
+];
+
 export default function UtmParametersModal({
   isOpen,
   onClose,
@@ -50,32 +77,7 @@ export default function UtmParametersModal({
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6">
-          {[
-            {
-              key: 'utm_source',
-              label: 'Source',
-              description: 'The referrer: e.g., google, newsletter',
-              placeholder: 'google',
-            },
-            {
-              key: 'utm_medium',
-              label: 'Medium',
-              description: 'Marketing medium: e.g., cpc, social',
-              placeholder: 'social',
-            },
-            {
-              key: 'utm_campaign',
-              label: 'Campaign',
-              description: 'Campaign name: e.g., spring_sale',
-              placeholder: 'spring_sale',
-            },
-            {
-              key: 'utm_content',
-              label: 'Content',
-              description: 'Use to differentiate similar content',
-              placeholder: 'blue_button',
-            },
-          ].map(({ key, label, description, placeholder }) => (
+          {utmParametersList.map(({ key, label, description, placeholder }) => (
             <div key={key} className="group relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {label}
