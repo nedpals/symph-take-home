@@ -1,7 +1,7 @@
 import BaseModal from '../common/BaseModal';
 import { URLStats } from '../../../../shared/types/url_shortener';
 import { createURL } from '../../api_utils';
-import OpenGraphPreview from '../common/OpenGraphPreview';
+import OpenGraphPreview from '../OpenGraphPreview';
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 
 export default function AnalyticsModal({ isOpen, onClose, stats, isLoading }: {

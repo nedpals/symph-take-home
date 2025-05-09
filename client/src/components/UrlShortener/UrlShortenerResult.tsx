@@ -1,9 +1,9 @@
 import { ShortURL } from "../../../../shared/types/url_shortener";
 import { createURL } from "../../api_utils";
 import { useUrlMetadata } from "../../hooks/useUrlMetadata";
-import OpenGraphPreview from "../common/OpenGraphPreview";
 import { cn } from "../../utils";
 import { useClipboard } from '../../hooks/useClipboard';
+import OpenGraphPreview from "../OpenGraphPreview";
 
 export default function UrlShortenerResult({
   shortUrl,

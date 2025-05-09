@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { URLMetadata } from "../../../../shared/types/url_metadata";
+import { URLMetadata } from "../../../shared/types/url_metadata";
 
 export default function OpenGraphPreview({ 
   metadata, 

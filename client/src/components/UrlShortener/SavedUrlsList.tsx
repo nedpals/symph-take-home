@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ShortURL, URLStats } from '../../../../shared/types/url_shortener';
-import AnalyticsModal from './AnalyticsModal';
 import { apiEndpointURL, createURL } from '../../api_utils';
-import OpenGraphPreview from '../common/OpenGraphPreview';
 import { URLMetadata } from '../../../../shared/types/url_metadata';
-import Tooltip from '../common/Tooltip';
 import { useClipboard } from '../../hooks/useClipboard';
+import AnalyticsModal from './AnalyticsModal';
+import OpenGraphPreview from '../OpenGraphPreview';
+import Tooltip from '../common/Tooltip';
 
 const timeAgo = (timestamp: number): string => {
   const now = new Date();
