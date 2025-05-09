@@ -6,6 +6,21 @@ import OpenGraphPreview from '../common/OpenGraphPreview';
 import { URLMetadata } from '../../../../shared/types/url_metadata';
 import Tooltip from '../common/Tooltip';
 
+const timeAgo = (timestamp: number): string => {
+  const now = new Date();
+  const savedDate = new Date(timestamp);
+  const seconds = Math.round((now.getTime() - savedDate.getTime()) / 1000);
+  const minutes = Math.round(seconds / 60);
+  const hours = Math.round(minutes / 60);
+  const days = Math.round(hours / 24);
+
+  if (seconds < 60) return `${seconds} sec ago`;
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours} hr ago`;
+  if (days < 7) return `${days} day(s) ago`;
+  return savedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 export default function SavedUrlsList({ 
   urls, 
   onRemove,
@@ -69,7 +84,7 @@ export default function SavedUrlsList({
         {urls.map(({ shortUrl, originalUrl, metadata }) => (
           <div
             key={shortUrl.id}
-            className="group rounded-xl border border-gray-200/80 shadow-sm bg-white/90 hover:bg-white/95 hover:border-purple-200 hover:shadow transition-all duration-200"
+            className="group rounded-xl border border-gray-200/80 shadow-md bg-white/90 hover:bg-white/95 hover:border-purple-200 hover:shadow transition-all duration-200"
           >
             <div className="relative p-3 sm:p-4">
               <div className="flex items-start justify-between gap-3">
@@ -95,14 +110,22 @@ export default function SavedUrlsList({
                   </a>
 
                   <div className="mt-2 space-y-2">
-                    {metadata && !isLoadingMetadata[shortUrl.id] && (
+                    {isLoadingMetadata && isLoadingMetadata[shortUrl.id] ? (
+                      <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" aria-label="Loading preview"></div>
+                    ) : metadata ? (
                       <OpenGraphPreview 
                         metadata={metadata} 
                         url={originalUrl} 
                         isLoading={false}
                       />
+                    ) : (
+                      !isLoadingMetadata[shortUrl.id] && <div className="text-xs text-gray-400 italic py-2">No preview available.</div>
                     )}
                   </div>
+
+                  <p className="mt-4 text-xs text-gray-600">
+                    Saved {timeAgo((shortUrl.createdAt instanceof Date ? shortUrl.createdAt : new Date(shortUrl.createdAt)).getTime())}
+                  </p>
                 </div>
 
                 {/* Action Buttons */}
