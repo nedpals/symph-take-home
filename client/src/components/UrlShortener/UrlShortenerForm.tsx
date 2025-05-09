@@ -261,7 +261,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
         {/* Options Bar with Submit Button */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 pb-3">
           {/* Left side - Customize buttons */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="w-full lg:w-auto flex items-center gap-2">
             {/* Slug Button */}
             <div className="relative">
               <button
@@ -397,6 +397,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
             type="submit"
             disabled={formState === 'loading' || formState === 'error' || formState === 'empty'}
             className={cn(
+              "w-full lg:w-auto",
               "bg-purple-600 text-white py-2 px-6 rounded-lg shadow-sm",
               "shadow-purple-200/50 transition-all duration-200 whitespace-nowrap flex-shrink-0",
               "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 font-medium",
