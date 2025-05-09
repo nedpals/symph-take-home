@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { URLMetadata } from "../../../../shared/types/url_metadata";
 
 export default function OpenGraphPreview({ 
@@ -10,7 +11,14 @@ export default function OpenGraphPreview({
   url: string;
   isLoading?: boolean;
   compact?: boolean;
+  isLink?: boolean;
 }) {
+  const [cachedMetadata, setCachedMetadata] = useState<URLMetadata | null>(null);
+  
+  useEffect(() => {
+    setCachedMetadata(metadata);
+  }, [metadata]);
+
   if (isLoading) {
     return (
       <div className="border border-gray-100 rounded-lg p-3 flex items-center justify-center h-12">
@@ -25,7 +33,7 @@ export default function OpenGraphPreview({
     );
   }
   
-  if (!metadata) return null;
+  if (!cachedMetadata) return null;
   
   // Generate hostname from URL for display
   const hostname = (() => {
@@ -39,16 +47,17 @@ export default function OpenGraphPreview({
   if (compact) {
     return (
       <div className="flex items-center space-x-2 py-1">
-        {metadata.favicon ? (
+        {cachedMetadata.favicon ? (
           <img 
-            src={metadata.favicon} 
+            src={cachedMetadata.favicon} 
             alt="" 
             className="w-4 h-4 flex-shrink-0"
-            onError={(e) => { 
-              e.currentTarget.style.display = 'none';
+            onError={() => { 
               // Show fallback icon container when image fails to load
-              const fallback = e.currentTarget.parentElement?.querySelector('.fallback-icon');
-              if (fallback) (fallback as HTMLElement).style.display = 'flex';
+              setCachedMetadata((prev) => prev ? ({
+                ...prev,
+                favicon: '',
+              }) : prev);
             }}
           />
         ) : (
@@ -59,7 +68,7 @@ export default function OpenGraphPreview({
           </div>
         )}
         <span className="text-xs text-gray-500 truncate flex-grow">
-          {metadata.title || hostname}
+          {cachedMetadata.title || hostname}
         </span>
       </div>
     );
@@ -68,11 +77,11 @@ export default function OpenGraphPreview({
   return (
     <div className="border border-gray-100 rounded-lg overflow-hidden transition-all">
       <div className="flex">
-        {metadata.image && (
+        {cachedMetadata.image && (
           <div className="w-1/4 max-h-16 overflow-hidden bg-gray-50">
             <img 
-              src={metadata.image} 
-              alt={metadata.title || "Website preview"} 
+              src={cachedMetadata.image} 
+              alt={cachedMetadata.title || "Website preview"} 
               className="h-full w-full object-cover"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
@@ -80,9 +89,9 @@ export default function OpenGraphPreview({
         )}
         <div className="p-2 flex-1">
           <div className="flex items-center mb-1">
-            {metadata.favicon ? (
+            {cachedMetadata.favicon ? (
               <img 
-                src={metadata.favicon} 
+                src={cachedMetadata.favicon} 
                 alt="" 
                 className="w-3 h-3 mr-1.5"
                 onError={(e) => { 
@@ -100,11 +109,11 @@ export default function OpenGraphPreview({
               </div>
             )}
             <span className="text-xs text-gray-500 truncate">
-              {metadata.siteName || hostname}
+              {cachedMetadata.siteName || hostname}
             </span>
           </div>
           <h4 className="text-xs font-medium text-gray-700 line-clamp-1">
-            {metadata.title || "No title available"}
+            {cachedMetadata.title || "No title available"}
           </h4>
         </div>
       </div>
