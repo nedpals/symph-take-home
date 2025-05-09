@@ -23,16 +23,16 @@ export async function createShortURL(req: Request, res: Response) {
       return respondError(res, "Invalid URL format");
     }
     
-    // Create the short URL
-    const shortUrl = await urlService.createShortURL({
+    // Create the short URL and unwrap the original URL
+    const response = await urlService.createShortURL({
       originalUrl,
       slug,
       expiresAt: expiresAt ? new Date(expiresAt) : undefined,
       utmParameters
     });
     
-    // Return the created short URL
-    return res.status(201).json({ shortUrl });
+    // Return the created short URL along with unwrapped URL info if available
+    return res.status(201).json(response);
   } catch (error: any) {
     if (error instanceof Error && error.message === "Custom slug already exists") {
       return respondError(res, error, 409);

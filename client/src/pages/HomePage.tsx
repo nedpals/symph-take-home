@@ -4,7 +4,7 @@ import URLShortenerResult from "../components/URLShortener/URLShortenerResult";
 import SavedUrlsList from "../components/URLShortener/SavedUrlsList";
 import { useSavedUrls } from "../hooks/useSavedUrls";
 
-import { CreateShortURLParams, ErrorResponse, ShortURL } from "../../../shared/types/url_shortener";
+import { CreateShortURLParams, ErrorResponse, ShortenURLResponse, ShortURL } from "../../../shared/types/url_shortener";
 import { apiEndpointURL } from "../api_utils";
 
 interface ShortUrlData {
@@ -36,18 +36,18 @@ export default function HomePage() {
         throw new Error(errorData.error || "Failed to shorten URL");
       }
       
-      const data = await response.json() as { shortUrl: ShortURL };
-      if (!data.shortUrl) {
+      const data = await response.json() as ShortenURLResponse;
+      if (!data.shortURL) {
         throw new Error("Failed to shorten URL");
       }
 
       const urlData = {
-        shortUrl: data.shortUrl,
-        originalUrl: formData.originalUrl,
+        shortUrl: data.shortURL,
+        originalUrl: data.unwrappedURL?.unwrappedURL || formData.originalUrl,
       };
       
       setShortUrlData(urlData);
-      saveUrl(data.shortUrl, formData.originalUrl);
+      saveUrl(data.shortURL, formData.originalUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred");
       console.error("Error shortening URL:", err);

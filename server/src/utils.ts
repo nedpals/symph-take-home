@@ -19,3 +19,5 @@ export function respondError(res: Response, error: string | Error, statusCode: n
   console.error("Unexpected error:", error);
   return res.status(500).json({ error: "An unexpected error occurred" });
 }
+
+export const USER_AGENT = "Mozilla/5.0 (compatible; URLShortenerBot/1.0)";

@@ -17,6 +17,20 @@ export interface ShortURL {
   updatedAt: Date;
 }
 
+export interface UnwrappedURL {
+  originalURL: string;
+  unwrappedURL: string;
+  redirectChain: string[];
+  hopCount: number;
+  elapsedTime: number;
+  error?: string;
+}
+
+export interface ShortenURLResponse {
+  shortURL: ShortURL;
+  unwrappedURL?: UnwrappedURL;
+}
+
 export interface UTMParameters {
   utm_source?: string;
   utm_medium?: string;

@@ -2,8 +2,10 @@ import { db } from "../db/knex";
 import crypto from "crypto";
 import { UAParser } from 'ua-parser-js';
 import { Request } from "express";
+import axios from "axios";
 
-import { CreateShortURLParams, ShortURL, URLStats, ClickAnalytics } from "../../../shared/types/url_shortener"
+import { CreateShortURLParams, ShortURL, URLStats, ClickAnalytics, UnwrappedURL, ShortenURLResponse } from "@shared/types/url_shortener"
+import { USER_AGENT } from "@app/utils";
 
 // Simple in-memory cache for frequently accessed URLs
 const urlCache = new Map<string, string>();
@@ -18,10 +20,20 @@ export class URLShortenerService {
   }
 
   /**
-   * Create a shortened URL with optional parameters
+   * Create a shortened URL with optional parameters and unwrap the original URL (if it's a redirect)
    */
-  async createShortURL(params: CreateShortURLParams): Promise<ShortURL> {
+  async createShortURL(params: CreateShortURLParams): Promise<ShortenURLResponse> {
     let { originalUrl, slug, expiresAt, utmParameters } = params;
+
+    // Try to unwrap the URL in the background
+    let unwrappedUrl: UnwrappedURL | undefined;
+    try {
+      unwrappedUrl = await this.unwrapURL(originalUrl);
+      originalUrl = unwrappedUrl.unwrappedURL; // Use the unwrapped URL
+    } catch (error) {
+      console.error("Error unwrapping URL during creation:", error);
+      // Continue without unwrapped URL if there was an error
+    }
     
     // Add UTM parameters to the original URL if provided
     if (utmParameters && Object.keys(utmParameters).length > 0) {
@@ -63,7 +75,7 @@ export class URLShortenerService {
       })
       .returning("*");
     
-    return shortUrl;
+    return { shortURL: shortUrl, unwrappedURL: unwrappedUrl };
   }
 
   /**
@@ -266,5 +278,72 @@ export class URLShortenerService {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return analytics;
+  }
+
+  /**
+   * Unwrap a shortened URL to find the final destination
+   * Follows redirect chains including popular URL shorteners
+   */
+  async unwrapURL(url: string, maxRedirects: number = 10): Promise<UnwrappedURL> {
+    const startTime = Date.now();
+    const redirectChain: string[] = [url];
+    let currentUrl = url;
+    let finalUrl = url;
+    let hopCount = 0;
+
+    try {
+      // Follow redirects until we reach the final destination or max redirects
+      while (hopCount < maxRedirects) {
+        const response = await axios.head(currentUrl, {
+          maxRedirects: 0,
+          validateStatus: status => status < 400 || status === 429 || status === 301 || status === 302 || status === 307 || status === 308,
+          timeout: 5000,
+          headers: {
+            'User-Agent': USER_AGENT
+          }
+        });
+
+        // Check if we have a redirect
+        if (response.status >= 300 && response.status < 400 && response.headers.location) {
+          const nextUrl = new URL(response.headers.location, currentUrl).toString();
+          
+          // Prevent infinite loops
+          if (redirectChain.includes(nextUrl)) {
+            break;
+          }
+          
+          redirectChain.push(nextUrl);
+          currentUrl = nextUrl;
+          finalUrl = nextUrl;
+          hopCount++;
+        } else {
+          // No more redirects, we've reached the final URL
+          finalUrl = currentUrl;
+          break;
+        }
+      }
+
+      const elapsedTime = Date.now() - startTime;
+
+      return {
+        originalURL: url,
+        unwrappedURL: finalUrl,
+        redirectChain,
+        hopCount,
+        elapsedTime
+      };
+    } catch (error) {
+      console.error("Error unwrapping URL:", error);
+      
+      // Return what we have so far
+      return {
+        originalURL: url,
+        unwrappedURL: finalUrl,
+        redirectChain,
+        hopCount,
+        elapsedTime: Date.now() - startTime,
+        error: error instanceof Error ? error.message : "Unknown error"
+      };
+    }
   }
 }

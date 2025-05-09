@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 import { URLMetadata } from '@shared/types/url_metadata';
+import { USER_AGENT } from '@app/utils';
 
 /**
  * Fetch and extract metadata from a URL including OpenGraph tags
@@ -22,7 +23,7 @@ export async function getURLMetadata(req: Request, res: Response) {
     const response = await axios.get(url, { 
       timeout: 12000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; URLShortenerBot/1.0)',
+        'User-Agent': USER_AGENT,
       }
     });
 
