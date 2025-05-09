@@ -26,7 +26,7 @@ export default function UTMParametersModal({
       <button
         type="button"
         onClick={onClose}
-        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+        className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
       >
         Cancel
       </button>
@@ -35,7 +35,7 @@ export default function UTMParametersModal({
         onClick={onClose}
         className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
           focus:ring-2 focus:ring-purple-200 focus:ring-offset-2
-          transition-all duration-200 shadow-sm shadow-purple-200"
+          transition-all duration-200 shadow-sm"
       >
         Apply Parameters
       </button>
@@ -88,13 +88,13 @@ export default function UTMParametersModal({
                 value={utmParameters[key as keyof UTMParameters] || ''}
                 onChange={(e) => handleChange(key as keyof UTMParameters, e.target.value)}
                 placeholder={placeholder}
-                className="block w-full px-4 py-2.5 bg-white/50 border border-gray-200 rounded-lg 
+                className="block w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg 
                   focus:ring-2 focus:ring-purple-100 focus:border-purple-300 
                   hover:border-gray-300 transition-all duration-200
                   placeholder:text-gray-400 text-gray-600"
               />
               <div className="absolute left-0 -bottom-5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div className="bg-gray-800 text-white text-xs rounded px-2 py-1 mt-1">
+                <div className="bg-gray-800 text-white text-xs rounded-md px-2 py-1 mt-1 shadow-lg">
                   {description}
                 </div>
               </div>

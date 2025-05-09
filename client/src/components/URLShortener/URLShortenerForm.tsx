@@ -269,18 +269,16 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
                   type="button"
                   onClick={() => setShowSlugPopup(!showSlugPopup)}
                   className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 
-                    hover:shadow-sm hover:shadow-purple-100/50 ${
+                    flex items-center ${
                     formData.slug
-                      ? 'border-purple-200 bg-purple-50 text-purple-700 shadow-sm shadow-purple-100/50'
+                      ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
                       : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-                    </svg>
-                    Custom Slug
-                  </div>
+                  <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                  </svg>
+                  Custom Slug
                 </button>
 
                 {/* Slug Popup */}
@@ -317,18 +315,17 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
                 <button
                   type="button"
                   onClick={() => setShowExpirationPopup(!showExpirationPopup)}
-                  className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                  className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
+                    flex items-center ${
                     formData.expiresAt
-                      ? 'border-purple-200 bg-purple-50 text-purple-700'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
+                      : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
                   }`}
                 >
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    Expiration
-                  </div>
+                  <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  Expiration
                 </button>
 
                 {/* Expiration Popup */}
@@ -356,19 +353,18 @@ export default function URLShortenerForm({ onSubmit, isLoading }: {
               <button
                 type="button"
                 onClick={() => setShowUTMModal(true)}
-                className={`px-3 py-2 text-sm rounded-md border transition-colors ${
+                className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
+                  flex items-center ${
                   Object.values(formData.utmParameters || {}).some(v => v)
-                    ? 'border-purple-200 bg-purple-50 text-purple-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    ? 'border-purple-300 bg-purple-50 text-purple-700 shadow-sm'
+                    : 'border-gray-200 hover:border-purple-200 text-gray-600 hover:text-purple-600'
                 }`}
               >
-                <div className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" />
-                    <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z" />
-                  </svg>
-                  UTM Parameters
-                </div>
+                <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 5a3 3 0 015-2.236A3 3 0 0114.83 6H16a2 2 0 110 4h-5V9a1 1 0 10-2 0v1H4a2 2 0 110-4h1.17C5.06 5.687 5 5.35 5 5zm4 1V5a1 1 0 10-1 1h1zm3 0a1 1 0 10-1-1v1h1z" clipRule="evenodd" />
+                  <path d="M9 11H3v5a2 2 0 002 2h4v-7zM11 18h4a2 2 0 002-2v-5h-6v7z" />
+                </svg>
+                UTM Parameters
               </button>
             </div>
 
