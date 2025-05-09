@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
 import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
-import { useOnClickOutside } from '../../hooks/useOnClickOutside';
 import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 import UtmParametersModal from './UtmParametersModal';
 import PopupContainer from '../PopupContainer';
@@ -50,6 +49,8 @@ const formatDurationOrDate = (durationMs?: number, date?: Date | string) => {
   return 'Expiration';
 };
 
+type PopupType = 'slug' | 'expiration' | 'utm' | null;
+
 export default function UrlShortenerForm({ onSubmit, isLoading }: {
   onSubmit: (data: CreateShortURLParams) => Promise<void>;
   isLoading: boolean;
@@ -66,27 +67,13 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
   const [slugError, setSlugError] = useState<string>("");
   const [clipboardAvailable, setClipboardAvailable] = useState<boolean>(false);
   
-  // Replace urlMetadata and isLoadingMetadata with hook
   const { metadata: urlMetadata, isLoading: isLoadingMetadata } = useUrlMetadata(
     isValidUrl(formData.originalUrl) ? formData.originalUrl : '',
     800 // debounce delay
   );
 
-  // Add new state for popups and modal
-  const [showSlugPopup, setShowSlugPopup] = useState(false);
-  const [showExpirationPopup, setShowExpirationPopup] = useState(false);
-  const [showUTMModal, setShowUTMModal] = useState(false);
-
-  // Refs for popup containers
-  const slugPopupRef = useRef<HTMLDivElement>(null);
-  const expirationPopupRef = useRef<HTMLDivElement>(null);
-
-  // Add new state for custom expiration date
+  const [currentPopup, setCurrentPopup] = useState<PopupType>(null);
   const [customExpirationDate, setCustomExpirationDate] = useState<string>("");
-
-  // Close popups when clicking outside
-  useOnClickOutside(slugPopupRef, () => setShowSlugPopup(false));
-  useOnClickOutside(expirationPopupRef, () => setShowExpirationPopup(false));
 
   // Check if clipboard API is available
   useEffect(() => {
@@ -267,7 +254,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowSlugPopup(!showSlugPopup)}
+                  onClick={() => setCurrentPopup(currentPopup === 'slug' ? null : 'slug')}
                   className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200 
                     flex items-center ${
                     formData.slug
@@ -283,10 +270,9 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
 
                 {/* Slug Popup */}
                 <PopupContainer
-                  isOpen={showSlugPopup}
-                  onClose={() => setShowSlugPopup(false)}
+                  isOpen={currentPopup === 'slug'}
+                  onClose={() => setCurrentPopup(null)}
                   title="Custom Slug"
-                  popupRef={slugPopupRef}
                 >
                   <div className={`relative rounded-lg ${slugError ? 'ring-2 ring-red-100' : ''}`}>
                     <input
@@ -312,9 +298,8 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
 
               {/* Expiration Button and Popup */}
               <ExpirationPopup
-                isOpen={showExpirationPopup}
-                onClose={() => setShowExpirationPopup(false)}
-                popupRef={expirationPopupRef}
+                isOpen={currentPopup === 'expiration'}
+                onClose={() => setCurrentPopup(null)}
                 hasExpiration={Boolean(formData.expireDurationMs || formData.expiresAt)}
                 customDate={customExpirationDate}
                 onOptionSelect={(duration) => {
@@ -342,12 +327,11 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
                     expiresAt: undefined 
                   }));
                   setCustomExpirationDate("");
-                  setShowExpirationPopup(false);
                 }}
                 render={({ hasExpiration }) => (
                   <button
                     type="button"
-                    onClick={() => setShowExpirationPopup(!showExpirationPopup)}
+                    onClick={() => setCurrentPopup(currentPopup === 'expiration' ? null : 'expiration')}
                     className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
                       flex items-center ${
                       hasExpiration
@@ -368,7 +352,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
               {/* UTM Parameters Button */}
               <button
                 type="button"
-                onClick={() => setShowUTMModal(true)}
+                onClick={() => setCurrentPopup('utm')}
                 className={`px-4 py-2.5 text-sm rounded-lg border transition-all duration-200
                   flex items-center ${
                   Object.values(formData.utmParameters || {}).some(v => v)
@@ -473,8 +457,8 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
 
       {/* UTM Parameters Modal */}
       <UtmParametersModal
-        isOpen={showUTMModal}
-        onClose={() => setShowUTMModal(false)}
+        isOpen={currentPopup === 'utm'}
+        onClose={() => setCurrentPopup(null)}
         utmParameters={formData.utmParameters ?? {}}
         onChange={(params) => setFormData(prev => ({ ...prev, utmParameters: params }))}
       />

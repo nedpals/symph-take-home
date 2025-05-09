@@ -1,4 +1,4 @@
-import { FC, RefObject, useState } from 'react';
+import { FC, useState } from 'react';
 import PopupContainer from '../PopupContainer';
 import ExpirationModal from './ExpirationModal';
 
@@ -13,7 +13,6 @@ export const EXPIRATION_OPTIONS = [
 export default function ExpirationPopup({
   isOpen,
   onClose,
-  popupRef,
   hasExpiration,
   customDate,
   onOptionSelect,
@@ -23,7 +22,6 @@ export default function ExpirationPopup({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  popupRef: RefObject<HTMLDivElement>;
   hasExpiration: boolean;
   customDate?: string;
   onOptionSelect: (duration: number | null) => void;
@@ -46,7 +44,7 @@ export default function ExpirationPopup({
   };
 
   return (
-    <>
+    <div className="relative">
       {render({
         onClick: () => onClose(),
         hasExpiration,
@@ -55,9 +53,7 @@ export default function ExpirationPopup({
       <PopupContainer
         isOpen={isOpen}
         onClose={onClose}
-        title="Expiration Time"
-        popupRef={popupRef}
-      >
+        title="Expiration Time">
         <div className="space-y-2">
           {EXPIRATION_OPTIONS.map((option) => (
             <button
@@ -99,6 +95,6 @@ export default function ExpirationPopup({
           onClose();
         }}
       />
-    </>
+    </div>
   );
 }

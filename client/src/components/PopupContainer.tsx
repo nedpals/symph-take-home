@@ -1,25 +1,26 @@
-import { ReactNode, RefObject } from 'react';
-
-interface PopupContainerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
-  popupRef: RefObject<HTMLDivElement>;
-}
+import { ReactNode, useRef } from 'react';
+import { useOnClickOutside } from '../hooks/useOnClickOutside';
 
 export default function PopupContainer({
   isOpen,
   onClose,
   title,
   children,
-  popupRef
-}: PopupContainerProps) {
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useOnClickOutside(ref, onClose);
+
   if (!isOpen) return null;
 
   return (
     <div
-      ref={popupRef}
+      ref={ref}
       className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-sm rounded-xl 
         shadow-lg shadow-purple-100/30 border border-purple-100/30 z-10 
         animate-fadeIn overflow-hidden"
