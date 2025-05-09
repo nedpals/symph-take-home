@@ -1,14 +1,6 @@
 import { useRef, useEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-
-interface BaseModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  description?: string;
-  children: ReactNode;
-  footer?: ReactNode;
-}
+import { cn } from '../../utils';
 
 export default function BaseModal({
   isOpen,
@@ -16,8 +8,19 @@ export default function BaseModal({
   title,
   description,
   children,
-  footer
-}: BaseModalProps) {
+  footer,
+  className,
+  maxWidth = 'max-w-lg',
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: ReactNode;
+  footer?: ReactNode;
+  className?: string;
+  maxWidth?: string;
+}) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,7 +58,16 @@ export default function BaseModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-xl shadow-black/5 w-full max-w-lg mx-4 animate-fadeIn border border-purple-100/20"
+        className={cn(
+          className,
+          maxWidth,
+          "bg-white",
+          "rounded-2xl",
+          "shadow-[0_0_15px_rgba(0,0,0,0.05),0_5px_25px_-5px_rgba(0,0,0,0.05)]",
+          "w-full mx-4 animate-fadeIn",
+          "border border-purple-100/30",
+          "ring-1 ring-black/5"
+        )}
       >
         <div className="flex items-center justify-between border-b border-purple-100/20 p-5">
           <div>
