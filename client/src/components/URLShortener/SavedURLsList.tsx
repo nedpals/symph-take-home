@@ -16,7 +16,7 @@ interface SavedURLsListProps {
   isLoadingMetadata?: Record<string, boolean>;
 }
 
-export default function SavedUrlsList({ 
+export default function SavedURLSList({ 
   urls, 
   onRemove,
   isLoadingMetadata = {}

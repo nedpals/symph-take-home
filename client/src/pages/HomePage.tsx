@@ -1,13 +1,13 @@
 import { useState } from "react";
 import URLShortenerForm from "../components/URLShortener/URLShortenerForm";
 import URLShortenerResult from "../components/URLShortener/URLShortenerResult";
-import SavedUrlsList from "../components/URLShortener/SavedUrlsList";
+import SavedURLSList from "../components/URLShortener/SavedURLSList";
 import { useSavedUrls } from "../hooks/useSavedUrls";
 
 import { CreateShortURLParams, ErrorResponse, ShortenURLResponse, ShortURL } from "../../../shared/types/url_shortener";
 import { apiEndpointURL } from "../api_utils";
 
-interface ShortUrlData {
+interface ShortURLData {
   shortUrl: ShortURL;
   originalUrl: string;
 }
@@ -15,7 +15,7 @@ interface ShortUrlData {
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [shortUrlData, setShortUrlData] = useState<ShortUrlData | null>(null);
+  const [shortUrlData, setShortUrlData] = useState<ShortURLData | null>(null);
   const { savedUrls, saveUrl, removeUrl } = useSavedUrls();
 
   const createShortUrl = async (formData: CreateShortURLParams) => {
@@ -94,7 +94,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <SavedUrlsList urls={savedUrls} onRemove={removeUrl} />
+        <SavedURLSList urls={savedUrls} onRemove={removeUrl} />
       </div>
     </div>
   );
