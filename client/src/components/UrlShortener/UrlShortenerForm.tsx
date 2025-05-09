@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { CreateShortURLParams, UTMParameters } from "../../../../shared/types/url_shortener";
 import { BACKEND_URL, createURL, isValidUrl } from "../../api_utils";
-import { useUrlMetadata } from '../../hooks/useUrlMetadata';
 import { useClipboard } from '../../hooks/useClipboard';
 import { cn } from "../../utils";
 import OpenGraphPreview from '../OpenGraphPreview';
@@ -70,11 +69,6 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
   const [urlError, setUrlError] = useState<string>("");
   const [slugError, setSlugError] = useState<string>("");
   
-  const { metadata: urlMetadata, isLoading: isLoadingMetadata } = useUrlMetadata(
-    isValidUrl(formData.originalUrl) ? formData.originalUrl : '',
-    800 // debounce delay
-  );
-
   const [currentPopup, setCurrentPopup] = useState<PopupType>(null);
   const [customExpirationDate, setCustomExpirationDate] = useState<string>("");
 
@@ -424,8 +418,7 @@ export default function UrlShortenerForm({ onSubmit, isLoading }: {
             {/* OpenGraph Preview */}
             <OpenGraphPreview
               url={formData.originalUrl}
-              metadata={urlMetadata}
-              isLoading={isLoadingMetadata}
+              debounceDelay={800}
             />
           </div>
         )}

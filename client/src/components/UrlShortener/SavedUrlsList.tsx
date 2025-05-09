@@ -25,7 +25,6 @@ const timeAgo = (timestamp: number): string => {
 export default function SavedUrlsList({ 
   urls, 
   onRemove,
-  isLoadingMetadata = {}
 }: {
   urls: {
     shortUrl: ShortURL;
@@ -112,17 +111,10 @@ export default function SavedUrlsList({
                   </a>
 
                   <div className="mt-2 space-y-2">
-                    {isLoadingMetadata && isLoadingMetadata[shortUrl.id] ? (
-                      <div className="h-24 w-full bg-gray-100 rounded-lg animate-pulse" aria-label="Loading preview"></div>
-                    ) : metadata ? (
-                      <OpenGraphPreview 
-                        metadata={metadata} 
-                        url={originalUrl} 
-                        isLoading={false}
-                      />
-                    ) : (
-                      !isLoadingMetadata[shortUrl.id] && <div className="text-xs text-gray-400 italic py-2">No preview available.</div>
-                    )}
+                    <OpenGraphPreview 
+                      url={originalUrl}
+                      initialMetadata={metadata}
+                    />
                   </div>
 
                   <p className="mt-4 text-xs text-gray-600">

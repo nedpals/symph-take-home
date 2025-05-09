@@ -1,6 +1,6 @@
 import { ShortURL } from "../../../../shared/types/url_shortener";
 import { createURL } from "../../api_utils";
-import { useUrlMetadata } from "../../hooks/useUrlMetadata";
+// import { useUrlMetadata } from "../../hooks/useUrlMetadata"; // Removed
 import { cn } from "../../utils";
 import { useClipboard } from '../../hooks/useClipboard';
 import OpenGraphPreview from "../OpenGraphPreview";
@@ -14,12 +14,11 @@ export default function UrlShortenerResult({
   originalUrl: string;
   onReset: () => void;
 }) {
-  const formattedShortUrl = createURL(shortUrl.slug);
-  const { copied, copyToClipboard } = useClipboard();
-  const { metadata, isLoading } = useUrlMetadata(originalUrl);
+  const { copyToClipboard, copied } = useClipboard();
+  const fullShortUrl = createURL(shortUrl.slug);
 
   const handleCopy = () => {
-    copyToClipboard(formattedShortUrl);
+    copyToClipboard(fullShortUrl);
   };
 
   return (
@@ -62,7 +61,8 @@ export default function UrlShortenerResult({
               </p>
               <p className="text-gray-800 break-all mt-1">{originalUrl}</p>
             </div>
-            <OpenGraphPreview metadata={metadata} url={originalUrl} isLoading={isLoading} />
+            <OpenGraphPreview url={originalUrl} /> 
+            {/* metadata and isLoading props removed */}
           </div>
 
           {/* Shortened URL */}
@@ -75,12 +75,12 @@ export default function UrlShortenerResult({
             </p>
             <div className="flex items-center">
               <a
-                href={formattedShortUrl}
+                href={fullShortUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-700 hover:text-purple-900 font-medium truncate flex-grow"
               >
-                {formattedShortUrl}
+                {fullShortUrl}
               </a>
               <button
                 onClick={handleCopy}
