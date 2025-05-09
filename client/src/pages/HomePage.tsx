@@ -1,7 +1,7 @@
 import { useState } from "react";
 import URLShortenerForm from "../components/URLShortener/URLShortenerForm";
 import URLShortenerResult from "../components/URLShortener/URLShortenerResult";
-import SavedURLsList from "../components/URLShortener/SavedURLsList";
+import SavedUrlsList from "../components/URLShortener/SavedUrlsList";
 import { useSavedUrls } from "../hooks/useSavedUrls";
 
 import { CreateShortURLParams, ErrorResponse, ShortURL } from "../../../shared/types/url_shortener";
@@ -94,7 +94,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <SavedURLsList urls={savedUrls} onRemove={removeUrl} />
+        <SavedUrlsList urls={savedUrls} onRemove={removeUrl} />
       </div>
     </div>
   );
